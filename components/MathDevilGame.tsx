@@ -92,16 +92,26 @@ const MathDevilGame = ({ onGameEnd }: { onGameEnd: (level: number, score: number
 
   // Adjust canvas size - maximize game view
   useEffect(() => {
+    let resizeTimeout: NodeJS.Timeout;
+
     const updateCanvasSize = () => {
-      const width = Math.min(window.innerWidth - 16, 520);
-      // Use 65% of viewport for canvas - bigger game area
-      const height = Math.min(window.innerHeight * 0.65, 600);
-      setCanvasWidth(width);
-      setCanvasHeight(Math.max(height, 400));
+      // Debounce resize to let it settle
+      clearTimeout(resizeTimeout);
+      resizeTimeout = setTimeout(() => {
+        const width = Math.min(window.innerWidth - 16, 520);
+        // Use 65% of viewport for canvas - bigger game area
+        const height = Math.min(window.innerHeight * 0.65, 600);
+        setCanvasWidth(width);
+        setCanvasHeight(Math.max(height, 400));
+      }, 100);
     };
+
     updateCanvasSize();
     window.addEventListener('resize', updateCanvasSize);
-    return () => window.removeEventListener('resize', updateCanvasSize);
+    return () => {
+      clearTimeout(resizeTimeout);
+      window.removeEventListener('resize', updateCanvasSize);
+    };
   }, []);
 
   const generateMathQuestion = (level: number): MathQuestion => {
@@ -344,11 +354,15 @@ const MathDevilGame = ({ onGameEnd }: { onGameEnd: (level: number, score: number
   const [isInitialized, setIsInitialized] = useState(false);
 
   useEffect(() => {
-    if (canvasWidth > 0 && canvasHeight > 0 && !isInitialized) {
+    if (canvasWidth > 0 && canvasHeight > 0) {
+      // Re-initialize level with correct canvas size
       initLevel();
-      setIsInitialized(true);
+      setGameStarted(false); // Keep player frozen after resize
+      if (!isInitialized) {
+        setIsInitialized(true);
+      }
     }
-  }, [canvasWidth, canvasHeight, isInitialized]);
+  }, [canvasWidth, canvasHeight]);
 
   // Animation loop for coin pulse and run animation
   useEffect(() => {
