@@ -7,6 +7,7 @@ import Navbar from '../Home/Navbar'
 
 export default function Home() {
   const { context, isLoading, isSDKLoaded } = useFrame()
+  const isDevMode = process.env.NEXT_PUBLIC_DEV_MODE === 'true'
 
   if (isLoading) {
     return (
@@ -18,7 +19,7 @@ export default function Home() {
     )
   }
 
-  if (!isSDKLoaded) {
+  if (!isSDKLoaded && !isDevMode) {
     return (
       <SafeAreaContainer insets={context?.client.safeAreaInsets}>
         <div className="flex min-h-screen flex-col items-center justify-center p-4 space-y-8">
@@ -32,6 +33,14 @@ export default function Home() {
 
   return (
     <SafeAreaContainer insets={context?.client.safeAreaInsets}>
+      {isDevMode && !isSDKLoaded && (
+        <div className="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-4 mb-4">
+          <p className="font-bold">Development Mode</p>
+          <p className="text-sm">
+            Running outside Farcaster app. Some features may not work correctly.
+          </p>
+        </div>
+      )}
       <Navbar />
       <Demo />
     </SafeAreaContainer>

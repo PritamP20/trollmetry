@@ -31,15 +31,22 @@ export function FrameProvider({ children }: FrameProviderProps) {
   const farcasterContextQuery = useQuery({
     queryKey: ['farcaster-context'],
     queryFn: async () => {
-      const context = await sdk.context
+      // Add timeout to prevent hanging
+      const timeoutPromise = new Promise((_, reject) =>
+        setTimeout(() => reject(new Error('SDK timeout')), 5000)
+      )
+
       try {
+        const context = await Promise.race([sdk.context, timeoutPromise])
         await sdk.actions.ready()
         return { context, isReady: true }
       } catch (err) {
         console.error('SDK initialization error:', err)
+        // Return a flag to indicate SDK is not available
+        return { context: null, isReady: false }
       }
-      return { context, isReady: false }
     },
+    retry: false, // Don't retry if SDK is not available
   })
 
   const isReady = farcasterContextQuery.data?.isReady ?? false
