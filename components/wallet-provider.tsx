@@ -4,7 +4,7 @@ import React, { ReactNode } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { createAppKit } from "@reown/appkit/react";
 import { WagmiAdapter } from "@reown/appkit-adapter-wagmi";
-import { baseSepolia } from "@reown/appkit/networks";
+import { sepolia } from "@reown/appkit/networks";
 import { cookieToInitialState, WagmiProvider, type Config } from "wagmi";
 import { farcasterMiniApp as miniAppConnector } from "@farcaster/miniapp-wagmi-connector";
 import { projectId, wagmiAdapter } from "@/config";
@@ -31,8 +31,8 @@ const metadata = {
 createAppKit({
   adapters: [wagmiAdapter],
   projectId,
-  networks: [baseSepolia],
-  defaultNetwork: baseSepolia,
+  networks: [sepolia],
+  defaultNetwork: sepolia,
   metadata,
   features: {
     analytics: true, // optional

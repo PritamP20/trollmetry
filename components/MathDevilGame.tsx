@@ -327,6 +327,7 @@ const MathDevilGame = ({ onGameEnd }: { onGameEnd: (level: number, score: number
       currentQuestion: question,
       playerX: 60,
       playerY: CANVAS_HEIGHT - 130,
+      gameOver: false,
     }));
     setVelocityY(0);
     setVelocityX(0);
@@ -334,9 +335,15 @@ const MathDevilGame = ({ onGameEnd }: { onGameEnd: (level: number, score: number
     setScoredOnCorrectPlatform(false);
   };
 
+  // Initialize level only after canvas size is set
+  const [isInitialized, setIsInitialized] = useState(false);
+
   useEffect(() => {
-    initLevel();
-  }, []);
+    if (canvasWidth > 0 && canvasHeight > 0 && !isInitialized) {
+      initLevel();
+      setIsInitialized(true);
+    }
+  }, [canvasWidth, canvasHeight, isInitialized]);
 
   // Animation loop for coin pulse and run animation
   useEffect(() => {
@@ -816,6 +823,9 @@ const MathDevilGame = ({ onGameEnd }: { onGameEnd: (level: number, score: number
           setTrollMessage('Fell into the void! 😱');
           setTimeout(() => setTrollMessage(''), 1500);
           if (newLives <= 0) {
+            setTimeout(() => {
+              onGameEnd(prev.level, prev.score, prev.coins);
+            }, 100);
             return { ...prev, gameOver: true };
           }
           newY = CANVAS_HEIGHT - 130;
