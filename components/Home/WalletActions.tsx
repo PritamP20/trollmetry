@@ -29,65 +29,31 @@ export function WalletActions() {
 
   if (isConnected) {
     return (
-      <div className="space-y-4 rounded-xl p-4 bg-[#001226] border border-[#0A5CDD]/40">
-        <h2 className="text-xl font-bold text-left text-white">Wallet</h2>
-        <div className="flex flex-row space-x-4 justify-start items-start">
-          <div className="flex flex-col space-y-4 justify-start">
-            <p className="text-sm text-left text-[#A3B3C2]">
-              Connected to wallet:{' '}
-              <span className="bg-white font-mono text-black rounded-md p-[4px]">
-                {address}
+      <div className="space-y-2 rounded-lg p-2 bg-[#001226] border border-[#0A5CDD]/40">
+        <div className="flex flex-col space-y-2">
+          <div className="flex items-center justify-between">
+            <p className="text-xs text-[#A3B3C2]">
+              <span className="font-mono text-white text-xs">
+                {address?.slice(0, 6)}...{address?.slice(-4)}
               </span>
             </p>
-            <p className="text-sm text-left text-[#A3B3C2]">
-              Chain Id:{' '}
-              <span className="bg-white font-mono text-black rounded-md p-[4px]">
-                {chainId}
-              </span>
-            </p>
-            {chainId === base.id ? (
-              <div className="flex flex-col space-y-2 border border-[#0A5CDD]/30 p-4 rounded-md bg-[#031B36]">
-                <h2 className="text-lg font-semibold text-left text-white">Send Transaction Example</h2>
-                <button
-                  type="button"
-                  className="bg-[#0A5CDD] hover:bg-[#0b6ef3] text-white rounded-md p-2 text-sm"
-                  onClick={sendTransactionHandler}
-                >
-                  Send Transaction
-                </button>
-                {hash && (
-                  <button
-                    type="button"
-                    className="bg-white text-black rounded-md p-2 text-sm"
-                    onClick={() =>
-                      window.open(
-                        `https://basescan.org/tx/${hash}`,
-                        '_blank',
-                      )
-                    }
-                  >
-                    View Transaction
-                  </button>
-                )}
-              </div>
-            ) : (
-              <button
-                type="button"
-                className="bg-[#0A5CDD] hover:bg-[#0b6ef3] text-white rounded-md p-2 text-sm"
-                onClick={() => switchChain({ chainId: base.id })}
-              >
-                Switch to Base
-              </button>
-            )}
-
             <button
               type="button"
-              className="bg-[#11253F] hover:bg-[#1a355a] text-white rounded-md p-2 text-sm border border-[#0A5CDD]/30"
+              className="bg-[#11253F] hover:bg-[#1a355a] text-white rounded px-2 py-1 text-xs border border-[#0A5CDD]/30"
               onClick={() => disconnect()}
             >
-              Disconnect Wallet
+              Disconnect
             </button>
           </div>
+          {chainId !== base.id && (
+            <button
+              type="button"
+              className="bg-[#0A5CDD] hover:bg-[#0b6ef3] text-white rounded px-2 py-1 text-xs w-full"
+              onClick={() => switchChain({ chainId: base.id })}
+            >
+              Switch to Base
+            </button>
+          )}
         </div>
       </div>
     )
@@ -95,35 +61,29 @@ export function WalletActions() {
 
   if (isEthProviderAvailable) {
     return (
-      <div className="space-y-4 rounded-xl p-4 bg-[#001226] border border-[#0A5CDD]/40">
-        <h2 className="text-xl font-bold text-left text-white">Wallet</h2>
-        <div className="flex flex-row space-x-4 justify-start items-start">
-          <button
-            type="button"
-            className="bg-[#0A5CDD] hover:bg-[#0b6ef3] text-white w-full rounded-md p-3 text-sm"
-            onClick={() => {
-              if (isEthProviderAvailable) {
-                // Inside Warpcast MiniApp: use the Farcaster connector
-                connect({ connector: miniAppConnector() })
-              } else {
-                // On the web: open the WalletConnect/AppKit modal
-                open?.()
-              }
-            }}
-          >
-            Connect Wallet (WalletConnect)
-          </button>
-        </div>
+      <div className="rounded-lg p-2 bg-[#001226] border border-[#0A5CDD]/40">
+        <button
+          type="button"
+          className="bg-[#0A5CDD] hover:bg-[#0b6ef3] text-white w-full rounded px-3 py-2 text-xs"
+          onClick={() => {
+            if (isEthProviderAvailable) {
+              // Inside Warpcast MiniApp: use the Farcaster connector
+              connect({ connector: miniAppConnector() })
+            } else {
+              // On the web: open the WalletConnect/AppKit modal
+              open?.()
+            }
+          }}
+        >
+          Connect Wallet
+        </button>
       </div>
     )
   }
 
   return (
-    <div className="space-y-4 rounded-xl p-4 bg-[#001226] border border-[#0A5CDD]/40">
-      <h2 className="text-xl font-bold text-left text-white">Wallet</h2>
-      <div className="flex flex-row space-x-4 justify-start items-start">
-        <p className="text-sm text-left text-[#A3B3C2]">Wallet connection only via Warpcast</p>
-      </div>
+    <div className="rounded-lg p-2 bg-[#001226] border border-[#0A5CDD]/40">
+      <p className="text-xs text-center text-[#A3B3C2]">Connect via Warpcast</p>
     </div>
   )
 }

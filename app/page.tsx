@@ -6,23 +6,23 @@ const frame = {
   version: 'next',
   imageUrl: `${APP_URL}/images/base.png`,
   button: {
-    title: 'Launch Template',
+    title: 'Play Math Devil',
     action: {
       type: 'launch_frame',
-      name: 'Base Farcaster MiniApp Template',
+      name: 'Math Devil - Troll Game',
       url: APP_URL,
       splashImageUrl: `${APP_URL}/images/splash.png`,
-      splashBackgroundColor: '#f7f7f7',
+      splashBackgroundColor: '#0f0f23',
     },
   },
 }
 
 export async function generateMetadata(): Promise<Metadata> {
   return {
-    title: 'Base Farcaster MiniApp Template',
+    title: 'Math Devil - Troll Game on Farcaster',
     openGraph: {
-      title: 'Base Farcaster MiniApp Template',
-      description: 'A template for building mini-apps on Farcaster and Base',
+      title: 'Math Devil - Troll Game',
+      description: 'A devilish math platformer with on-chain points, badges & leaderboard on Sepolia',
     },
     other: {
       'fc:frame': JSON.stringify(frame),

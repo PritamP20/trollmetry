@@ -28,7 +28,10 @@ interface FrameProviderProps {
 }
 
 export function FrameProvider({ children }: FrameProviderProps) {
-  const farcasterContextQuery = useQuery({
+  const farcasterContextQuery = useQuery<{
+    context: Context.MiniAppContext | null
+    isReady: boolean
+  }>({
     queryKey: ['farcaster-context'],
     queryFn: async () => {
       // Add timeout to prevent hanging
@@ -39,7 +42,7 @@ export function FrameProvider({ children }: FrameProviderProps) {
       try {
         const context = await Promise.race([sdk.context, timeoutPromise])
         await sdk.actions.ready()
-        return { context, isReady: true }
+        return { context: context as Context.MiniAppContext, isReady: true }
       } catch (err) {
         console.error('SDK initialization error:', err)
         // Return a flag to indicate SDK is not available
@@ -54,7 +57,7 @@ export function FrameProvider({ children }: FrameProviderProps) {
   return (
     <FrameProviderContext.Provider
       value={{
-        context: farcasterContextQuery.data?.context,
+        context: farcasterContextQuery.data?.context ?? undefined,
         actions: sdk.actions,
         isLoading: farcasterContextQuery.isPending,
         isSDKLoaded: isReady && Boolean(farcasterContextQuery.data?.context),
