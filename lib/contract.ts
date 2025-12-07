@@ -1,4 +1,4 @@
-export const GAME_CONTRACT_ADDRESS = (process.env.NEXT_PUBLIC_GAME_CONTRACT_ADDRESS || '0x0000000000000000000000000000000000000000') as `0x${string}`;
+export const GAME_CONTRACT_ADDRESS = '0x5f56db06c877147e9426bc0b4f62e1acf36f0077' as `0x${string}`;
 
 export const GAME_CONTRACT_ABI = [
   {

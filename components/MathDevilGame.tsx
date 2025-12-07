@@ -90,14 +90,14 @@ const MathDevilGame = ({ onGameEnd }: { onGameEnd: (level: number, score: number
   const JUMP_FORCE = -14;
   const MOVE_SPEED = 5;
 
-  // Adjust canvas size - balanced for mobile/Farcaster
+  // Adjust canvas size - maximize game view
   useEffect(() => {
     const updateCanvasSize = () => {
-      const width = Math.min(window.innerWidth - 16, 500);
-      // Use 55% of viewport for canvas, leave room for controls
-      const height = Math.min(window.innerHeight * 0.55, 550);
+      const width = Math.min(window.innerWidth - 16, 520);
+      // Use 65% of viewport for canvas - bigger game area
+      const height = Math.min(window.innerHeight * 0.65, 600);
       setCanvasWidth(width);
-      setCanvasHeight(Math.max(height, 350));
+      setCanvasHeight(Math.max(height, 400));
     };
     updateCanvasSize();
     window.addEventListener('resize', updateCanvasSize);
@@ -240,10 +240,10 @@ const MathDevilGame = ({ onGameEnd }: { onGameEnd: (level: number, score: number
     }
     setCoins(newCoins);
 
-    // Path after math puzzle
+    // Path after math puzzle - 45% from top
     newPlatforms.push({
       x: CANVAS_WIDTH / 2 - 70,
-      y: CANVAS_HEIGHT - 350,
+      y: CANVAS_HEIGHT * 0.45,
       width: 140,
       height: 18,
     });
@@ -252,7 +252,7 @@ const MathDevilGame = ({ onGameEnd }: { onGameEnd: (level: number, score: number
     if (level > 1) {
       newPlatforms.push({
         x: CANVAS_WIDTH - 280,
-        y: CANVAS_HEIGHT - 380,
+        y: CANVAS_HEIGHT * 0.35,
         width: 90,
         height: 18,
       });
@@ -261,7 +261,7 @@ const MathDevilGame = ({ onGameEnd }: { onGameEnd: (level: number, score: number
       if (level > 4) {
         newPlatforms.push({
           x: CANVAS_WIDTH / 2 + 100,
-          y: CANVAS_HEIGHT - 320,
+          y: CANVAS_HEIGHT * 0.5,
           width: 80,
           height: 18,
           disappearing: true,
@@ -270,10 +270,10 @@ const MathDevilGame = ({ onGameEnd }: { onGameEnd: (level: number, score: number
       }
     }
 
-    // Upper path to exit
+    // Upper path to exit - positioned at 15% from top
     newPlatforms.push({
       x: CANVAS_WIDTH - 220,
-      y: CANVAS_HEIGHT - 450,
+      y: Math.max(CANVAS_HEIGHT * 0.15, 50),
       width: 120,
       height: 18,
     });
@@ -303,17 +303,17 @@ const MathDevilGame = ({ onGameEnd }: { onGameEnd: (level: number, score: number
     if (level > 4) {
       newPlatforms.push({
         x: CANVAS_WIDTH - 180,
-        y: CANVAS_HEIGHT - 320,
+        y: CANVAS_HEIGHT * 0.4,
         width: 45,
         height: 25,
         isSpike: true,
       });
     }
 
-    // Exit door
+    // Exit door - positioned at 5% from top
     newPlatforms.push({
       x: CANVAS_WIDTH - 90,
-      y: CANVAS_HEIGHT - 540,
+      y: Math.max(CANVAS_HEIGHT * 0.05, 20),
       width: 70,
       height: 85,
     });
@@ -1012,36 +1012,24 @@ const MathDevilGame = ({ onGameEnd }: { onGameEnd: (level: number, score: number
         </div>
       </div>
 
-      {/* Bottom Navigation Bar - Fixed */}
-      <nav className="glass border-t border-cyan-500/20 py-2 px-4">
+      {/* Bottom Navigation - Compact */}
+      <nav className="glass border-t border-cyan-500/20 py-1 px-2">
         <div className="flex justify-around items-center">
-          <Link
-            href="/"
-            className="flex flex-col items-center gap-1 text-cyan-400 hover:text-cyan-300 transition-all duration-200 transform hover:scale-110"
-          >
-            <span className="text-2xl">🎮</span>
-            <span className="text-xs font-semibold">Game</span>
+          <Link href="/" className="flex items-center gap-1 text-cyan-400 px-2 py-1">
+            <span className="text-lg">🎮</span>
+            <span className="text-[10px] font-semibold">Game</span>
           </Link>
-          <Link
-            href="/leaderboard"
-            className="flex flex-col items-center gap-1 text-slate-400 hover:text-cyan-300 transition-all duration-200 transform hover:scale-110"
-          >
-            <span className="text-2xl">🏆</span>
-            <span className="text-xs font-semibold">Leaderboard</span>
+          <Link href="/leaderboard" className="flex items-center gap-1 text-slate-400 hover:text-cyan-300 px-2 py-1">
+            <span className="text-lg">🏆</span>
+            <span className="text-[10px] font-semibold">Ranks</span>
           </Link>
-          <Link
-            href="/badges"
-            className="flex flex-col items-center gap-1 text-slate-400 hover:text-cyan-300 transition-all duration-200 transform hover:scale-110"
-          >
-            <span className="text-2xl">🏅</span>
-            <span className="text-xs font-semibold">Badges</span>
+          <Link href="/badges" className="flex items-center gap-1 text-slate-400 hover:text-cyan-300 px-2 py-1">
+            <span className="text-lg">🏅</span>
+            <span className="text-[10px] font-semibold">Badges</span>
           </Link>
-          <Link
-            href="/profile"
-            className="flex flex-col items-center gap-1 text-slate-400 hover:text-cyan-300 transition-all duration-200 transform hover:scale-110"
-          >
-            <span className="text-2xl">👤</span>
-            <span className="text-xs font-semibold">Profile</span>
+          <Link href="/profile" className="flex items-center gap-1 text-slate-400 hover:text-cyan-300 px-2 py-1">
+            <span className="text-lg">👤</span>
+            <span className="text-[10px] font-semibold">Profile</span>
           </Link>
         </div>
       </nav>
