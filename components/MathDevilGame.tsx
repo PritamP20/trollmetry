@@ -89,13 +89,15 @@ const MathDevilGame = ({ onGameEnd }: { onGameEnd: (level: number, score: number
   const JUMP_FORCE = -14;
   const MOVE_SPEED = 5;
 
-  // Adjust canvas size
+  // Adjust canvas size - compact for mobile/Farcaster
   useEffect(() => {
     const updateCanvasSize = () => {
-      const width = Math.min(window.innerWidth - 32, 520);
-      const height = Math.min(window.innerHeight * 0.7, 680);
+      const width = Math.min(window.innerWidth - 24, 480);
+      // Leave room for controls (approx 180px) and nav (60px)
+      const availableHeight = window.innerHeight - 260;
+      const height = Math.min(availableHeight, 400);
       setCanvasWidth(width);
-      setCanvasHeight(height);
+      setCanvasHeight(Math.max(height, 280)); // Minimum height
     };
     updateCanvasSize();
     window.addEventListener('resize', updateCanvasSize);
@@ -659,7 +661,8 @@ const MathDevilGame = ({ onGameEnd }: { onGameEnd: (level: number, score: number
 
   // Game loop
   useEffect(() => {
-    if (gameState.gameOver || !isInitialized) return;
+    // Don't run game loop until fully initialized with platforms
+    if (gameState.gameOver || !isInitialized || platforms.length === 0) return;
 
     const gameLoop = setInterval(() => {
       setGameState(prev => {
@@ -935,33 +938,35 @@ const MathDevilGame = ({ onGameEnd }: { onGameEnd: (level: number, score: number
   }
 
   return (
-    <div className="flex flex-col bg-gradient-to-b from-[#030712] via-[#0f172a] to-[#030712] min-h-screen">
-      <div className="flex flex-col items-center max-w-2xl mx-auto w-full px-2 py-3 flex-1">
-        <div className="glass-card rounded-2xl p-3 w-full mb-3">
+    <div className="flex flex-col bg-gradient-to-b from-[#030712] via-[#0f172a] to-[#030712] h-screen overflow-hidden">
+      <div className="flex flex-col items-center max-w-2xl mx-auto w-full px-2 py-1 flex-1">
+        {/* Game Canvas */}
+        <div className="glass-card rounded-xl p-2 w-full mb-2">
           <canvas
             ref={canvasRef}
             width={CANVAS_WIDTH}
             height={CANVAS_HEIGHT}
-            className="rounded-xl w-full"
+            className="rounded-lg w-full"
             style={{ imageRendering: 'crisp-edges' }}
           />
         </div>
 
-        <div className="glass-card rounded-2xl p-5 w-full mb-20">
-          <p className="text-cyan-100 text-center text-sm font-semibold mb-4">
-            🎭 Jump on the <span className="text-gradient-warm font-bold">TROLL</span> answer, not the mathematically correct one!
+        {/* Controls */}
+        <div className="glass-card rounded-xl p-3 w-full">
+          <p className="text-cyan-100 text-center text-xs font-semibold mb-2">
+            🎭 Jump on the <span className="text-gradient-warm font-bold">TROLL</span> answer!
           </p>
 
-          <div className="flex items-center justify-center gap-8">
+          <div className="flex items-center justify-center gap-6">
             <div className="flex flex-col items-center">
-              <div className="flex gap-3">
+              <div className="flex gap-2">
                 <button
                   onTouchStart={() => setVelocityX(-MOVE_SPEED)}
                   onTouchEnd={() => setVelocityX(0)}
                   onMouseDown={() => setVelocityX(-MOVE_SPEED)}
                   onMouseUp={() => setVelocityX(0)}
                   onMouseLeave={() => setVelocityX(0)}
-                  className="bg-slate-800 hover:bg-slate-700 border-2 border-cyan-500/30 hover:border-cyan-400 px-6 py-6 rounded-xl text-white text-2xl font-bold active:bg-cyan-600 shadow-lg shadow-cyan-500/10 transition-all duration-200"
+                  className="bg-slate-800 hover:bg-slate-700 border-2 border-cyan-500/30 px-4 py-4 rounded-lg text-white text-xl font-bold active:bg-cyan-600 transition-all"
                 >
                   ←
                 </button>
@@ -971,75 +976,65 @@ const MathDevilGame = ({ onGameEnd }: { onGameEnd: (level: number, score: number
                   onMouseDown={() => setVelocityX(MOVE_SPEED)}
                   onMouseUp={() => setVelocityX(0)}
                   onMouseLeave={() => setVelocityX(0)}
-                  className="bg-slate-800 hover:bg-slate-700 border-2 border-cyan-500/30 hover:border-cyan-400 px-6 py-6 rounded-xl text-white text-2xl font-bold active:bg-cyan-600 shadow-lg shadow-cyan-500/10 transition-all duration-200"
+                  className="bg-slate-800 hover:bg-slate-700 border-2 border-cyan-500/30 px-4 py-4 rounded-lg text-white text-xl font-bold active:bg-cyan-600 transition-all"
                 >
                   →
                 </button>
               </div>
-              <p className="text-xs text-slate-400 mt-2 font-semibold">MOVE</p>
             </div>
 
-            <div className="flex flex-col items-center">
-              <button
-                onTouchStart={() => {
-                  if (!isJumping) {
-                    setVelocityY(JUMP_FORCE);
-                    setIsJumping(true);
-                  }
-                }}
-                onMouseDown={() => {
-                  if (!isJumping) {
-                    setVelocityY(JUMP_FORCE);
-                    setIsJumping(true);
-                  }
-                }}
-                className="bg-gradient-to-br from-cyan-500 to-teal-500 hover:from-cyan-400 hover:to-teal-400 border-4 border-cyan-300/50 px-10 py-10 rounded-full text-white text-xl font-bold active:from-cyan-600 active:to-teal-600 shadow-xl shadow-cyan-500/40 transition-all transform hover:scale-110 animate-pulse-glow"
-              >
-                JUMP
-              </button>
-              <p className="text-xs text-slate-400 mt-2 font-semibold">SPACE</p>
-            </div>
-          </div>
-
-          <div className="mt-4 text-center hidden md:block">
-            <p className="text-xs text-slate-500">Keyboard: Arrow Keys / WASD + Space</p>
+            <button
+              onTouchStart={() => {
+                if (!isJumping) {
+                  setVelocityY(JUMP_FORCE);
+                  setIsJumping(true);
+                }
+              }}
+              onMouseDown={() => {
+                if (!isJumping) {
+                  setVelocityY(JUMP_FORCE);
+                  setIsJumping(true);
+                }
+              }}
+              className="bg-gradient-to-br from-cyan-500 to-teal-500 border-3 border-cyan-300/50 px-8 py-6 rounded-full text-white text-lg font-bold active:from-cyan-600 active:to-teal-600 shadow-lg shadow-cyan-500/30 transition-all"
+            >
+              JUMP
+            </button>
           </div>
         </div>
       </div>
 
-      {/* Bottom Navigation Bar */}
-      <nav className="fixed bottom-0 left-0 right-0 glass border-t border-cyan-500/20 shadow-2xl z-50">
-        <div className="max-w-2xl mx-auto px-4 py-3">
-          <div className="flex justify-around items-center">
-            <Link
-              href="/"
-              className="flex flex-col items-center gap-1 text-cyan-400 hover:text-cyan-300 transition-all duration-200 transform hover:scale-110"
-            >
-              <span className="text-2xl">🎮</span>
-              <span className="text-xs font-semibold">Game</span>
-            </Link>
-            <Link
-              href="/leaderboard"
-              className="flex flex-col items-center gap-1 text-slate-400 hover:text-cyan-300 transition-all duration-200 transform hover:scale-110"
-            >
-              <span className="text-2xl">🏆</span>
-              <span className="text-xs font-semibold">Leaderboard</span>
-            </Link>
-            <Link
-              href="/badges"
-              className="flex flex-col items-center gap-1 text-slate-400 hover:text-cyan-300 transition-all duration-200 transform hover:scale-110"
-            >
-              <span className="text-2xl">🏅</span>
-              <span className="text-xs font-semibold">Badges</span>
-            </Link>
-            <Link
-              href="/profile"
-              className="flex flex-col items-center gap-1 text-slate-400 hover:text-cyan-300 transition-all duration-200 transform hover:scale-110"
-            >
-              <span className="text-2xl">👤</span>
-              <span className="text-xs font-semibold">Profile</span>
-            </Link>
-          </div>
+      {/* Bottom Navigation Bar - Fixed */}
+      <nav className="glass border-t border-cyan-500/20 py-2 px-4">
+        <div className="flex justify-around items-center">
+          <Link
+            href="/"
+            className="flex flex-col items-center gap-1 text-cyan-400 hover:text-cyan-300 transition-all duration-200 transform hover:scale-110"
+          >
+            <span className="text-2xl">🎮</span>
+            <span className="text-xs font-semibold">Game</span>
+          </Link>
+          <Link
+            href="/leaderboard"
+            className="flex flex-col items-center gap-1 text-slate-400 hover:text-cyan-300 transition-all duration-200 transform hover:scale-110"
+          >
+            <span className="text-2xl">🏆</span>
+            <span className="text-xs font-semibold">Leaderboard</span>
+          </Link>
+          <Link
+            href="/badges"
+            className="flex flex-col items-center gap-1 text-slate-400 hover:text-cyan-300 transition-all duration-200 transform hover:scale-110"
+          >
+            <span className="text-2xl">🏅</span>
+            <span className="text-xs font-semibold">Badges</span>
+          </Link>
+          <Link
+            href="/profile"
+            className="flex flex-col items-center gap-1 text-slate-400 hover:text-cyan-300 transition-all duration-200 transform hover:scale-110"
+          >
+            <span className="text-2xl">👤</span>
+            <span className="text-xs font-semibold">Profile</span>
+          </Link>
         </div>
       </nav>
     </div>
