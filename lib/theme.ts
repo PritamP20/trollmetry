@@ -1,49 +1,49 @@
-// Professional dark theme for Math Devil Game
+// Professional dark theme for Math Devil Game - Cyan/Teal Edition
 export const theme = {
-  // Background colors
+  // Background colors - Deep space navy
   bg: {
-    primary: '#0a0e27',
-    secondary: '#151932',
-    tertiary: '#1e2139',
-    card: '#252941',
+    primary: '#030712',
+    secondary: '#0f172a',
+    tertiary: '#1e293b',
+    card: '#1e293b',
   },
 
   // Platform colors
   platform: {
-    safe: '#2d3250',
-    danger: '#3d2645',
-    correct: '#1f4037',
-    fake: '#3d1e2e',
-    moving: '#2e3b4e',
+    safe: '#334155',
+    danger: '#450a0a',
+    correct: '#134e4a',
+    fake: '#450a0a',
+    moving: '#1e3a5f',
   },
 
-  // Accent colors
+  // Accent colors - Cyan/Teal with coral
   accent: {
-    primary: '#7c3aed', // Purple
-    secondary: '#fbbf24', // Gold
-    success: '#10b981', // Green
+    primary: '#06b6d4', // Cyan
+    secondary: '#f97316', // Coral/Orange
+    success: '#10b981', // Emerald
     danger: '#ef4444', // Red
-    warning: '#f59e0b', // Orange
+    warning: '#f59e0b', // Amber
   },
 
   // Text colors
   text: {
     primary: '#f8fafc',
-    secondary: '#cbd5e1',
+    secondary: '#94a3b8',
     muted: '#64748b',
   },
 
   // Border colors
   border: {
-    primary: '#374151',
-    accent: '#7c3aed',
-    gold: '#fbbf24',
+    primary: '#334155',
+    accent: '#06b6d4',
+    gold: '#f97316',
   },
 
   // Game elements
   game: {
-    player: '#8b5cf6',
-    coin: '#fbbf24',
+    player: '#06b6d4',
+    coin: '#f97316',
     spike: '#dc2626',
     exit: '#10b981',
   }
