@@ -7,8 +7,8 @@ import './globals.css'
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  title: 'Base Farcaster MiniApp Template',
-  description: 'A template for building mini-apps on Farcaster and Base',
+  title: 'Trollometry - Math Troll Game',
+  description: 'Jump on the TROLL answer, not the mathematically correct one!',
 }
 
 export default function RootLayout({

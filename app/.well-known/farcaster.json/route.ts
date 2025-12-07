@@ -6,16 +6,16 @@ export async function GET() {
     // TODO: Add your own account association
     frame: {
       version: "1",
-      name: "Monad Farcaster MiniApp Template",
+      name: "Trollometry",
       iconUrl: `${APP_URL}/images/icon.png`,
       homeUrl: `${APP_URL}`,
       imageUrl: `${APP_URL}/images/feed.png`,
       screenshotUrls: [],
-      tags: ["monad", "farcaster", "miniapp", "template"],
-      primaryCategory: "developer-tools",
-      buttonTitle: "Launch Template",
+      tags: ["trollometry", "math", "game", "farcaster", "web3"],
+      primaryCategory: "games",
+      buttonTitle: "Play Trollometry",
       splashImageUrl: `${APP_URL}/images/splash.png`,
-      splashBackgroundColor: "#ffffff",
+      splashBackgroundColor: "#030712",
       webhookUrl: `${APP_URL}/api/webhook`,
     },
     accountAssociation: {

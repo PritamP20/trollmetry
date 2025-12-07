@@ -116,36 +116,56 @@ const MathDevilGame = ({ onGameEnd }: { onGameEnd: (level: number, score: number
 
   const generateMathQuestion = (level: number): MathQuestion => {
     const trollTypes = [
-      // PEMDAS troll
+      // Type 1: a × b - c (multiply first, then subtract)
+      // Correct: (a × b) - c
+      // Troll: a × (b - c) - doing subtraction first
       () => {
-        const a = Math.floor(Math.random() * 8) + 12;
-        const b = Math.floor(Math.random() * 4) + 2;
-        const c = Math.floor(Math.random() * 6) + 3;
-        const correctAnswer = a - b * c;
-        const trollAnswer = (a - b) * c;
+        const a = Math.floor(Math.random() * 4) + 2; // 2-5
+        const b = Math.floor(Math.random() * 4) + 2; // 2-5
+        const c = Math.floor(Math.random() * 3) + 1; // 1-3
+        const correctAnswer = (a * b) - c; // Following PEMDAS
+        const trollAnswer = a * (b - c); // Ignoring PEMDAS (left to right would be wrong)
         const wrongAnswer = a + b - c;
         return {
-          question: `${a} - ${b} × ${c}`,
+          question: `${a} × ${b} - ${c}`,
           correctMathAnswer: correctAnswer,
           trollAnswer: trollAnswer,
           wrongAnswer: wrongAnswer,
-          displayQuestion: `${a} - ${b} × ${c} = ?`
+          displayQuestion: `${a} × ${b} - ${c} = ?`
         };
       },
-      // Division troll
+      // Type 2: a + b × c (multiply first, then add)
+      // Correct: a + (b × c)
+      // Troll: (a + b) × c - doing addition first
       () => {
-        const a = Math.floor(Math.random() * 15) + 15;
-        const c = Math.floor(Math.random() * 3) + 2;
-        const b = c * (Math.floor(Math.random() * 6) + 3);
-        const correctAnswer = a + b / c;
-        const trollAnswer = Math.floor((a + b) / c);
-        const wrongAnswer = a - b / c;
+        const a = Math.floor(Math.random() * 5) + 1; // 1-5
+        const b = Math.floor(Math.random() * 3) + 2; // 2-4
+        const c = Math.floor(Math.random() * 3) + 2; // 2-4
+        const correctAnswer = a + (b * c); // Following PEMDAS
+        const trollAnswer = (a + b) * c; // Ignoring PEMDAS
+        const wrongAnswer = a * b + c;
         return {
-          question: `${a} + ${b} ÷ ${c}`,
+          question: `${a} + ${b} × ${c}`,
           correctMathAnswer: correctAnswer,
           trollAnswer: trollAnswer,
-          wrongAnswer: Math.floor(wrongAnswer),
-          displayQuestion: `${a} + ${b} ÷ ${c} = ?`
+          wrongAnswer: wrongAnswer,
+          displayQuestion: `${a} + ${b} × ${c} = ?`
+        };
+      },
+      // Type 3: a - b + c (simple left to right, but troll does it wrong)
+      () => {
+        const a = Math.floor(Math.random() * 6) + 5; // 5-10
+        const b = Math.floor(Math.random() * 3) + 2; // 2-4
+        const c = Math.floor(Math.random() * 4) + 1; // 1-4
+        const correctAnswer = (a - b) + c; // Left to right
+        const trollAnswer = a - (b + c); // Wrong grouping
+        const wrongAnswer = a + b - c;
+        return {
+          question: `${a} - ${b} + ${c}`,
+          correctMathAnswer: correctAnswer,
+          trollAnswer: trollAnswer,
+          wrongAnswer: wrongAnswer,
+          displayQuestion: `${a} - ${b} + ${c} = ?`
         };
       },
     ];
@@ -355,11 +375,22 @@ const MathDevilGame = ({ onGameEnd }: { onGameEnd: (level: number, score: number
 
   useEffect(() => {
     if (canvasWidth > 0 && canvasHeight > 0) {
-      // Re-initialize level with correct canvas size
-      initLevel();
-      setGameStarted(false); // Keep player frozen after resize
       if (!isInitialized) {
+        // First time - generate new question and platforms
+        initLevel();
         setIsInitialized(true);
+      } else if (gameState.currentQuestion) {
+        // Resize only - regenerate platforms with SAME question
+        generatePlatforms(gameState.level, gameState.currentQuestion);
+        // Update player position to ground
+        const groundY = CANVAS_HEIGHT - 30 - PLAYER_SIZE;
+        setGameState(prev => ({
+          ...prev,
+          playerX: 60,
+          playerY: groundY,
+        }));
+        setVelocityY(0);
+        setGameStarted(false); // Keep player frozen after resize
       }
     }
   }, [canvasWidth, canvasHeight]);
