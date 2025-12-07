@@ -656,7 +656,7 @@ const MathDevilGame = ({ onGameEnd }: { onGameEnd: (level: number, score: number
 
   // Game loop
   useEffect(() => {
-    if (gameState.gameOver) return;
+    if (gameState.gameOver || !isInitialized) return;
 
     const gameLoop = setInterval(() => {
       setGameState(prev => {
@@ -680,8 +680,8 @@ const MathDevilGame = ({ onGameEnd }: { onGameEnd: (level: number, score: number
         // Coin collection - check coins from state to prevent multiple collections
         coins.forEach(coin => {
           if (!coin.collected &&
-              Math.abs(newX + PLAYER_SIZE / 2 - coin.x) < 22 &&
-              Math.abs(newY + PLAYER_SIZE / 2 - coin.y) < 22) {
+            Math.abs(newX + PLAYER_SIZE / 2 - coin.x) < 22 &&
+            Math.abs(newY + PLAYER_SIZE / 2 - coin.y) < 22) {
             newCoins += 10;
             newScore += 50;
             // Mark coin as collected
@@ -797,10 +797,10 @@ const MathDevilGame = ({ onGameEnd }: { onGameEnd: (level: number, score: number
         // Exit check
         const exitPlatform = platforms[platforms.length - 1];
         if (exitPlatform &&
-            newX < exitPlatform.x + exitPlatform.width &&
-            newX + PLAYER_SIZE > exitPlatform.x &&
-            newY < exitPlatform.y + exitPlatform.height &&
-            newY + PLAYER_SIZE > exitPlatform.y) {
+          newX < exitPlatform.x + exitPlatform.width &&
+          newX + PLAYER_SIZE > exitPlatform.x &&
+          newY < exitPlatform.y + exitPlatform.height &&
+          newY + PLAYER_SIZE > exitPlatform.y) {
           const nextLevel = prev.level + 1;
           const question = generateMathQuestion(nextLevel);
           generatePlatforms(nextLevel, question);
@@ -850,7 +850,7 @@ const MathDevilGame = ({ onGameEnd }: { onGameEnd: (level: number, score: number
     }, 1000 / 60);
 
     return () => clearInterval(gameLoop);
-  }, [velocityY, velocityX, isJumping, platforms, gameState.gameOver]);
+  }, [velocityY, velocityX, isJumping, platforms, gameState.gameOver, isInitialized]);
 
   // Controls
   useEffect(() => {
