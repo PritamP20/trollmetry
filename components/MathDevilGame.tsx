@@ -63,7 +63,7 @@ const MathDevilGame = ({ onGameEnd }: { onGameEnd: (level: number, score: number
     lives: 3,
     currentQuestion: null,
     playerX: 60,
-    playerY: 0, // Start at top, will be set properly by initLevel
+    playerY: 500, // Safe default, will be set to ground by initLevel
     gameOver: false,
     won: false,
     isRunning: false,
@@ -322,13 +322,15 @@ const MathDevilGame = ({ onGameEnd }: { onGameEnd: (level: number, score: number
   const initLevel = () => {
     const question = generateMathQuestion(gameState.level);
     generatePlatforms(gameState.level, question);
+    // Place player on ground platform (ground is at CANVAS_HEIGHT - 30)
+    const groundY = CANVAS_HEIGHT - 30 - PLAYER_SIZE;
     setGameState(prev => ({
       ...prev,
       currentQuestion: question,
       playerX: 60,
-      playerY: CANVAS_HEIGHT - 130,
+      playerY: groundY,
       gameOver: false,
-      lives: prev.lives <= 0 ? 3 : prev.lives, // Reset lives if game over
+      lives: prev.lives <= 0 ? 3 : prev.lives,
     }));
     setVelocityY(0);
     setVelocityX(0);
@@ -829,7 +831,8 @@ const MathDevilGame = ({ onGameEnd }: { onGameEnd: (level: number, score: number
             }, 100);
             return { ...prev, gameOver: true };
           }
-          newY = CANVAS_HEIGHT - 130;
+          // Respawn on ground platform
+          newY = CANVAS_HEIGHT - 30 - PLAYER_SIZE;
           newX = 60;
           newVelocityY = 0;
         }
