@@ -61,8 +61,6 @@ export default function BadgesPage() {
       const allBadges: BadgeMetadata[] = [];
       for (let i = 1; i <= Number(totalBadgeTypes); i++) {
         try {
-          // You'll need to call contract.getBadgeMetadata(i) here
-          // For now, using placeholder data
           allBadges.push({
             name: `Badge ${i}`,
             description: 'Achievement badge',
@@ -147,21 +145,21 @@ export default function BadgesPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-[#0a0e27] via-[#151932] to-[#0a0e27] text-white">
+    <div className="min-h-screen bg-gradient-to-b from-[#030712] via-[#0f172a] to-[#030712] text-white">
       <div className="container mx-auto px-4 py-8 max-w-7xl">
         {/* Header */}
-        <div className="text-center mb-8">
-          <h1 className="text-5xl font-bold mb-3 bg-gradient-to-r from-amber-400 to-purple-400 bg-clip-text text-transparent">
+        <div className="text-center mb-8 animate-slide-up">
+          <h1 className="text-5xl font-bold mb-3 text-gradient-warm">
             Achievement Badges
           </h1>
-          <p className="text-gray-400 text-lg">
+          <p className="text-slate-400 text-lg">
             Collect {totalBadgeTypes ? Number(totalBadgeTypes) : 20} unique NFT badges
           </p>
 
           {address && playerBadges && (
-            <div className="mt-4 inline-block bg-amber-900/30 border border-amber-500/50 rounded-lg px-6 py-3">
-              <p className="text-amber-300">
-                Your Collection: <span className="text-2xl font-bold text-amber-400">
+            <div className="mt-4 inline-block glass-card rounded-xl px-6 py-3 border border-orange-500/30">
+              <p className="text-orange-300">
+                Your Collection: <span className="text-2xl font-bold text-gradient-warm">
                   {(playerBadges as bigint[]).length} / {totalBadgeTypes ? Number(totalBadgeTypes) : 20}
                 </span>
               </p>
@@ -173,19 +171,19 @@ export default function BadgesPage() {
         <div className="flex justify-center gap-4 mb-8">
           <Link
             href="/"
-            className="bg-[#1e2139] hover:bg-[#252941] border border-purple-500/30 px-6 py-3 rounded-lg font-semibold transition-all"
+            className="glass-card hover:border-cyan-500/50 px-6 py-3 rounded-xl font-semibold transition-all hover:scale-105"
           >
             ← Back to Game
           </Link>
           <Link
             href="/leaderboard"
-            className="bg-[#1e2139] hover:bg-[#252941] border border-purple-500/30 px-6 py-3 rounded-lg font-semibold transition-all"
+            className="glass-card hover:border-cyan-500/50 px-6 py-3 rounded-xl font-semibold transition-all hover:scale-105"
           >
             🏆 Leaderboard
           </Link>
           <Link
             href="/profile"
-            className="bg-[#1e2139] hover:bg-[#252941] border border-purple-500/30 px-6 py-3 rounded-lg font-semibold transition-all"
+            className="glass-card hover:border-cyan-500/50 px-6 py-3 rounded-xl font-semibold transition-all hover:scale-105"
           >
             👤 My Profile
           </Link>
@@ -196,7 +194,7 @@ export default function BadgesPage() {
           <div key={catIndex} className="mb-12">
             <div className="flex items-center gap-3 mb-6">
               <span className="text-4xl">{category.icon}</span>
-              <h2 className="text-3xl font-bold text-purple-300">{category.name}</h2>
+              <h2 className="text-3xl font-bold text-gradient">{category.name}</h2>
             </div>
 
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -211,14 +209,14 @@ export default function BadgesPage() {
                 return (
                   <div
                     key={badgeId}
-                    className={`relative bg-[#1e2139] rounded-xl border-2 p-6 transition-all transform hover:scale-105 ${
-                      isEarned
-                        ? 'border-amber-500 shadow-lg shadow-amber-500/30'
-                        : 'border-purple-500/30 opacity-70'
-                    }`}
+                    className={`relative glass-card rounded-2xl border-2 p-6 transition-all transform hover:scale-105 animate-slide-up ${isEarned
+                        ? 'border-orange-500 shadow-lg shadow-orange-500/20'
+                        : 'border-slate-700/50 opacity-70'
+                      }`}
+                    style={{ animationDelay: `${i * 50}ms` }}
                   >
                     {isEarned && (
-                      <div className="absolute -top-3 -right-3 bg-amber-500 text-black w-12 h-12 rounded-full flex items-center justify-center text-2xl shadow-lg">
+                      <div className="absolute -top-3 -right-3 bg-gradient-to-r from-orange-500 to-amber-500 text-white w-12 h-12 rounded-full flex items-center justify-center text-2xl shadow-lg">
                         ✓
                       </div>
                     )}
@@ -228,30 +226,30 @@ export default function BadgesPage() {
                         {getBadgeIcon(badgeInfo.name)}
                       </div>
 
-                      <h3 className="text-xl font-bold mb-2 text-purple-300">
+                      <h3 className="text-xl font-bold mb-2 text-cyan-300">
                         {badgeInfo.name}
                       </h3>
 
-                      <p className="text-sm text-gray-400 mb-4">
+                      <p className="text-sm text-slate-400 mb-4">
                         {badgeInfo.description}
                       </p>
 
-                      <div className="bg-[#252941] rounded-lg p-3 mb-3">
-                        <p className="text-xs text-gray-500 mb-1">Requirements:</p>
-                        <p className="text-sm font-semibold text-amber-400">
+                      <div className="bg-slate-800/50 rounded-xl p-3 mb-3 border border-slate-700">
+                        <p className="text-xs text-slate-500 mb-1">Requirements:</p>
+                        <p className="text-sm font-semibold text-gradient-warm">
                           {badgeInfo.requirement}
                         </p>
                       </div>
 
                       {!isEarned && address && (
                         <div className="mt-4">
-                          <div className="w-full bg-[#252941] rounded-full h-2 mb-2">
+                          <div className="w-full bg-slate-800 rounded-full h-2 mb-2">
                             <div
-                              className="bg-gradient-to-r from-purple-500 to-amber-500 h-2 rounded-full transition-all"
+                              className="bg-gradient-to-r from-cyan-500 to-teal-500 h-2 rounded-full transition-all"
                               style={{ width: `${progress}%` }}
                             ></div>
                           </div>
-                          <p className="text-xs text-gray-500">
+                          <p className="text-xs text-slate-500">
                             {Math.round(progress)}% Complete
                           </p>
                         </div>
@@ -265,10 +263,10 @@ export default function BadgesPage() {
         ))}
 
         {!address && (
-          <div className="text-center py-20">
+          <div className="text-center py-20 animate-bounce-in">
             <div className="text-6xl mb-4">🔐</div>
-            <h3 className="text-2xl font-bold text-gray-400 mb-2">Connect Wallet</h3>
-            <p className="text-gray-500">Connect your wallet to see your badge collection!</p>
+            <h3 className="text-2xl font-bold text-slate-400 mb-2">Connect Wallet</h3>
+            <p className="text-slate-500">Connect your wallet to see your badge collection!</p>
           </div>
         )}
       </div>

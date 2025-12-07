@@ -62,8 +62,8 @@ const MathDevilGame = ({ onGameEnd }: { onGameEnd: (level: number, score: number
     coins: 0,
     lives: 3,
     currentQuestion: null,
-    playerX: 50,
-    playerY: 300,
+    playerX: 60,
+    playerY: 0, // Start at top, will be set properly by initLevel
     gameOver: false,
     won: false,
     isRunning: false,
@@ -328,6 +328,7 @@ const MathDevilGame = ({ onGameEnd }: { onGameEnd: (level: number, score: number
       playerX: 60,
       playerY: CANVAS_HEIGHT - 130,
       gameOver: false,
+      lives: prev.lives <= 0 ? 3 : prev.lives, // Reset lives if game over
     }));
     setVelocityY(0);
     setVelocityX(0);
@@ -899,26 +900,29 @@ const MathDevilGame = ({ onGameEnd }: { onGameEnd: (level: number, score: number
 
   if (gameState.gameOver) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-b from-[#0a0e27] to-[#151932] text-white p-4">
-        <div className="bg-[#1e2139] border-2 border-purple-500 rounded-xl p-8 max-w-md w-full text-center shadow-2xl">
-          <h1 className="text-4xl mb-6 text-purple-400 font-bold">Game Over!</h1>
+      <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-b from-[#030712] via-[#0f172a] to-[#030712] text-white p-4">
+        <div className="glass-card rounded-2xl p-8 max-w-md w-full text-center animate-bounce-in">
+          <div className="gradient-border rounded-xl p-6 mb-6">
+            <h1 className="text-4xl mb-2 text-gradient font-bold">Game Over!</h1>
+            <p className="text-slate-400 text-sm">Great effort, troll master!</p>
+          </div>
           <div className="space-y-4 mb-8">
-            <div className="bg-[#252941] p-4 rounded-lg">
-              <p className="text-sm text-gray-400 mb-1">Level Reached</p>
-              <p className="text-3xl text-amber-400 font-bold">{gameState.level}</p>
+            <div className="bg-slate-800/50 p-4 rounded-xl border border-slate-700">
+              <p className="text-sm text-slate-400 mb-1">Level Reached</p>
+              <p className="text-3xl text-gradient-warm font-bold">{gameState.level}</p>
             </div>
-            <div className="bg-[#252941] p-4 rounded-lg">
-              <p className="text-sm text-gray-400 mb-1">Final Score</p>
+            <div className="bg-slate-800/50 p-4 rounded-xl border border-slate-700">
+              <p className="text-sm text-slate-400 mb-1">Final Score</p>
               <p className="text-3xl text-emerald-400 font-bold">{gameState.score}</p>
             </div>
-            <div className="bg-[#252941] p-4 rounded-lg">
-              <p className="text-sm text-gray-400 mb-1">Coins Collected</p>
-              <p className="text-3xl text-amber-400 font-bold">{gameState.coins}</p>
+            <div className="bg-slate-800/50 p-4 rounded-xl border border-slate-700">
+              <p className="text-sm text-slate-400 mb-1">Coins Collected</p>
+              <p className="text-3xl text-gradient-warm font-bold">{gameState.coins}</p>
             </div>
           </div>
           <button
             onClick={() => onGameEnd(gameState.level, gameState.score, gameState.coins)}
-            className="bg-purple-600 hover:bg-purple-700 text-white px-8 py-4 rounded-lg text-lg font-bold w-full transition-all transform hover:scale-105"
+            className="bg-gradient-to-r from-cyan-500 to-teal-500 hover:from-cyan-600 hover:to-teal-600 text-white px-8 py-4 rounded-xl text-lg font-bold w-full transition-all transform hover:scale-105 shadow-lg shadow-cyan-500/30"
           >
             Submit Score & View Leaderboard
           </button>
@@ -928,21 +932,21 @@ const MathDevilGame = ({ onGameEnd }: { onGameEnd: (level: number, score: number
   }
 
   return (
-    <div className="flex flex-col bg-gradient-to-b from-[#0a0e27] to-[#151932] min-h-screen">
+    <div className="flex flex-col bg-gradient-to-b from-[#030712] via-[#0f172a] to-[#030712] min-h-screen">
       <div className="flex flex-col items-center max-w-2xl mx-auto w-full px-2 py-3 flex-1">
-        <div className="bg-[#1e2139] border-3 border-purple-500/30 rounded-xl p-4 w-full shadow-2xl mb-3">
+        <div className="glass-card rounded-2xl p-3 w-full mb-3">
           <canvas
             ref={canvasRef}
             width={CANVAS_WIDTH}
             height={CANVAS_HEIGHT}
-            className="rounded-lg w-full"
+            className="rounded-xl w-full"
             style={{ imageRendering: 'crisp-edges' }}
           />
         </div>
 
-        <div className="bg-[#1e2139] border-3 border-purple-500/30 rounded-xl p-4 w-full shadow-2xl mb-20">
-          <p className="text-white text-center text-sm font-semibold mb-4">
-            Jump on the TROLL answer, not the mathematically correct one!
+        <div className="glass-card rounded-2xl p-5 w-full mb-20">
+          <p className="text-cyan-100 text-center text-sm font-semibold mb-4">
+            🎭 Jump on the <span className="text-gradient-warm font-bold">TROLL</span> answer, not the mathematically correct one!
           </p>
 
           <div className="flex items-center justify-center gap-8">
@@ -954,7 +958,7 @@ const MathDevilGame = ({ onGameEnd }: { onGameEnd: (level: number, score: number
                   onMouseDown={() => setVelocityX(-MOVE_SPEED)}
                   onMouseUp={() => setVelocityX(0)}
                   onMouseLeave={() => setVelocityX(0)}
-                  className="bg-[#2d3250] hover:bg-[#3d4260] border-2 border-purple-500/50 px-6 py-6 rounded-lg text-white text-2xl font-bold active:bg-purple-600 shadow-lg transition-all"
+                  className="bg-slate-800 hover:bg-slate-700 border-2 border-cyan-500/30 hover:border-cyan-400 px-6 py-6 rounded-xl text-white text-2xl font-bold active:bg-cyan-600 shadow-lg shadow-cyan-500/10 transition-all duration-200"
                 >
                   ←
                 </button>
@@ -964,12 +968,12 @@ const MathDevilGame = ({ onGameEnd }: { onGameEnd: (level: number, score: number
                   onMouseDown={() => setVelocityX(MOVE_SPEED)}
                   onMouseUp={() => setVelocityX(0)}
                   onMouseLeave={() => setVelocityX(0)}
-                  className="bg-[#2d3250] hover:bg-[#3d4260] border-2 border-purple-500/50 px-6 py-6 rounded-lg text-white text-2xl font-bold active:bg-purple-600 shadow-lg transition-all"
+                  className="bg-slate-800 hover:bg-slate-700 border-2 border-cyan-500/30 hover:border-cyan-400 px-6 py-6 rounded-xl text-white text-2xl font-bold active:bg-cyan-600 shadow-lg shadow-cyan-500/10 transition-all duration-200"
                 >
                   →
                 </button>
               </div>
-              <p className="text-xs text-gray-400 mt-2 font-semibold">MOVE</p>
+              <p className="text-xs text-slate-400 mt-2 font-semibold">MOVE</p>
             </div>
 
             <div className="flex flex-col items-center">
@@ -986,48 +990,48 @@ const MathDevilGame = ({ onGameEnd }: { onGameEnd: (level: number, score: number
                     setIsJumping(true);
                   }
                 }}
-                className="bg-purple-600 hover:bg-purple-700 border-4 border-purple-400 px-10 py-10 rounded-full text-white text-xl font-bold active:bg-purple-800 shadow-lg transition-all transform hover:scale-105"
+                className="bg-gradient-to-br from-cyan-500 to-teal-500 hover:from-cyan-400 hover:to-teal-400 border-4 border-cyan-300/50 px-10 py-10 rounded-full text-white text-xl font-bold active:from-cyan-600 active:to-teal-600 shadow-xl shadow-cyan-500/40 transition-all transform hover:scale-110 animate-pulse-glow"
               >
                 JUMP
               </button>
-              <p className="text-xs text-gray-400 mt-2 font-semibold">SPACE</p>
+              <p className="text-xs text-slate-400 mt-2 font-semibold">SPACE</p>
             </div>
           </div>
 
           <div className="mt-4 text-center hidden md:block">
-            <p className="text-xs text-gray-500">Keyboard: Arrow Keys / WASD + Space</p>
+            <p className="text-xs text-slate-500">Keyboard: Arrow Keys / WASD + Space</p>
           </div>
         </div>
       </div>
 
       {/* Bottom Navigation Bar */}
-      <nav className="fixed bottom-0 left-0 right-0 bg-[#1e2139] border-t-2 border-purple-500/30 shadow-2xl z-50">
+      <nav className="fixed bottom-0 left-0 right-0 glass border-t border-cyan-500/20 shadow-2xl z-50">
         <div className="max-w-2xl mx-auto px-4 py-3">
           <div className="flex justify-around items-center">
             <Link
               href="/"
-              className="flex flex-col items-center gap-1 text-purple-400 hover:text-purple-300 transition-colors"
+              className="flex flex-col items-center gap-1 text-cyan-400 hover:text-cyan-300 transition-all duration-200 transform hover:scale-110"
             >
               <span className="text-2xl">🎮</span>
               <span className="text-xs font-semibold">Game</span>
             </Link>
             <Link
               href="/leaderboard"
-              className="flex flex-col items-center gap-1 text-gray-400 hover:text-purple-300 transition-colors"
+              className="flex flex-col items-center gap-1 text-slate-400 hover:text-cyan-300 transition-all duration-200 transform hover:scale-110"
             >
               <span className="text-2xl">🏆</span>
               <span className="text-xs font-semibold">Leaderboard</span>
             </Link>
             <Link
               href="/badges"
-              className="flex flex-col items-center gap-1 text-gray-400 hover:text-purple-300 transition-colors"
+              className="flex flex-col items-center gap-1 text-slate-400 hover:text-cyan-300 transition-all duration-200 transform hover:scale-110"
             >
               <span className="text-2xl">🏅</span>
               <span className="text-xs font-semibold">Badges</span>
             </Link>
             <Link
               href="/profile"
-              className="flex flex-col items-center gap-1 text-gray-400 hover:text-purple-300 transition-colors"
+              className="flex flex-col items-center gap-1 text-slate-400 hover:text-cyan-300 transition-all duration-200 transform hover:scale-110"
             >
               <span className="text-2xl">👤</span>
               <span className="text-xs font-semibold">Profile</span>

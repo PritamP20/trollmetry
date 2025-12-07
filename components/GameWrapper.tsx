@@ -100,21 +100,21 @@ export default function GameWrapper() {
 
   if (isSubmitting || isPending || isConfirming) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen bg-[#0f0f23] text-white p-4">
-        <div className="bg-[#1a1a2e] border-4 border-[#4ecdc4] rounded-lg p-8 max-w-md w-full text-center">
-          <h2 className="text-2xl font-bold mb-4">Submitting Score...</h2>
+      <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-b from-[#030712] via-[#0f172a] to-[#030712] text-white p-4">
+        <div className="glass-card rounded-2xl p-8 max-w-md w-full text-center animate-bounce-in">
+          <h2 className="text-2xl font-bold mb-4 text-gradient">Submitting Score...</h2>
           <div className="flex justify-center mb-4">
-            <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-[#4ecdc4]"></div>
+            <div className="animate-spin rounded-full h-16 w-16 border-4 border-cyan-500 border-t-transparent"></div>
           </div>
           {gameScore && (
             <div className="space-y-2 text-lg">
-              <p>Level: <span className="text-yellow-400 font-bold">{gameScore.level}</span></p>
-              <p>Score: <span className="text-green-400 font-bold">{gameScore.score}</span></p>
-              <p>Coins: <span className="text-yellow-400 font-bold">{gameScore.coins}</span></p>
+              <p>Level: <span className="text-gradient-warm font-bold">{gameScore.level}</span></p>
+              <p>Score: <span className="text-emerald-400 font-bold">{gameScore.score}</span></p>
+              <p>Coins: <span className="text-gradient-warm font-bold">{gameScore.coins}</span></p>
             </div>
           )}
-          {isPending && <p className="mt-4 text-sm text-gray-400">Waiting for wallet confirmation...</p>}
-          {isConfirming && <p className="mt-4 text-sm text-gray-400">Confirming transaction on blockchain...</p>}
+          {isPending && <p className="mt-4 text-sm text-slate-400">Waiting for wallet confirmation...</p>}
+          {isConfirming && <p className="mt-4 text-sm text-slate-400">Confirming transaction on blockchain...</p>}
         </div>
       </div>
     );
@@ -122,45 +122,45 @@ export default function GameWrapper() {
 
   if (error) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen bg-[#0f0f23] text-white p-4">
-        <div className="bg-[#1a1a2e] border-4 border-[#e74c3c] rounded-lg p-8 max-w-2xl w-full">
-          <h2 className="text-2xl font-bold mb-4 text-[#e74c3c] text-center">Transaction Failed</h2>
+      <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-b from-[#030712] via-[#0f172a] to-[#030712] text-white p-4">
+        <div className="glass-card rounded-2xl p-8 max-w-2xl w-full border border-red-500/30">
+          <h2 className="text-2xl font-bold mb-4 text-red-400 text-center">Transaction Failed</h2>
 
-          <div className="mb-6 p-4 bg-[#0f0f23] rounded-lg text-left">
-            <p className="text-sm font-mono text-gray-300 mb-2">Error Details:</p>
+          <div className="mb-6 p-4 bg-slate-900/50 rounded-xl text-left border border-slate-700">
+            <p className="text-sm font-mono text-slate-300 mb-2">Error Details:</p>
             <p className="text-xs font-mono text-red-400 break-words">{error.message}</p>
           </div>
 
-          <div className="mb-6 p-4 bg-[#0f0f23] rounded-lg text-left text-sm">
-            <p className="font-bold mb-2 text-yellow-400">Common Solutions:</p>
-            <ul className="list-disc list-inside space-y-1 text-gray-300">
-              <li>Make sure you're connected to <strong className="text-[#4ecdc4]">Sepolia</strong> network</li>
+          <div className="mb-6 p-4 bg-slate-900/50 rounded-xl text-left text-sm border border-slate-700">
+            <p className="font-bold mb-2 text-gradient-warm">Common Solutions:</p>
+            <ul className="list-disc list-inside space-y-1 text-slate-300">
+              <li>Make sure you're connected to <strong className="text-cyan-400">Sepolia</strong> network</li>
               <li>Check you have enough ETH for gas fees</li>
               <li>Verify the contract address: <span className="text-xs font-mono">{GAME_CONTRACT_ADDRESS}</span></li>
               <li>View contract on <a
                 href={`https://sepolia.etherscan.io/address/${GAME_CONTRACT_ADDRESS}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-[#4ecdc4] hover:underline"
+                className="text-cyan-400 hover:underline"
               >Etherscan</a></li>
             </ul>
           </div>
 
           {gameScore && (
-            <div className="mb-4 p-4 bg-[#0f0f23] rounded-lg">
-              <p className="text-sm text-gray-400 mb-2">Your Game Stats (not saved):</p>
+            <div className="mb-4 p-4 bg-slate-900/50 rounded-xl border border-slate-700">
+              <p className="text-sm text-slate-400 mb-2">Your Game Stats (not saved):</p>
               <div className="flex justify-around text-center">
                 <div>
-                  <p className="text-xs text-gray-500">Level</p>
-                  <p className="text-lg font-bold text-yellow-400">{gameScore.level}</p>
+                  <p className="text-xs text-slate-500">Level</p>
+                  <p className="text-lg font-bold text-gradient-warm">{gameScore.level}</p>
                 </div>
                 <div>
-                  <p className="text-xs text-gray-500">Score</p>
-                  <p className="text-lg font-bold text-green-400">{gameScore.score}</p>
+                  <p className="text-xs text-slate-500">Score</p>
+                  <p className="text-lg font-bold text-emerald-400">{gameScore.score}</p>
                 </div>
                 <div>
-                  <p className="text-xs text-gray-500">Coins</p>
-                  <p className="text-lg font-bold text-yellow-400">{gameScore.coins}</p>
+                  <p className="text-xs text-slate-500">Coins</p>
+                  <p className="text-lg font-bold text-gradient-warm">{gameScore.coins}</p>
                 </div>
               </div>
             </div>
@@ -173,7 +173,7 @@ export default function GameWrapper() {
                 setGameScore(null);
                 router.push('/');
               }}
-              className="flex-1 bg-gray-600 px-6 py-3 rounded-lg hover:bg-gray-700 font-bold"
+              className="flex-1 bg-slate-700 hover:bg-slate-600 px-6 py-3 rounded-xl font-bold transition-all"
             >
               Back to Home
             </button>
@@ -183,7 +183,7 @@ export default function GameWrapper() {
                   handleGameEnd(gameScore.level, gameScore.score, gameScore.coins);
                 }
               }}
-              className="flex-1 bg-[#4ecdc4] px-6 py-3 rounded-lg hover:bg-[#3db8a8] font-bold"
+              className="flex-1 bg-gradient-to-r from-cyan-500 to-teal-500 hover:from-cyan-600 hover:to-teal-600 px-6 py-3 rounded-xl font-bold transition-all shadow-lg shadow-cyan-500/30"
             >
               Retry
             </button>

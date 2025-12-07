@@ -35,8 +35,8 @@ export default function ProfilePage() {
 
   const rank = leaderboard && address
     ? (leaderboard as any[]).findIndex(
-        (entry: any) => entry.player.toLowerCase() === address.toLowerCase()
-      ) + 1
+      (entry: any) => entry.player.toLowerCase() === address.toLowerCase()
+    ) + 1
     : null;
 
   useEffect(() => {
@@ -75,14 +75,14 @@ export default function ProfilePage() {
 
   if (!isConnected || !address) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-[#0a0e27] via-[#151932] to-[#0a0e27] text-white flex items-center justify-center p-4">
-        <div className="text-center">
+      <div className="min-h-screen bg-gradient-to-b from-[#030712] via-[#0f172a] to-[#030712] text-white flex items-center justify-center p-4">
+        <div className="text-center animate-bounce-in">
           <div className="text-6xl mb-6">🔐</div>
-          <h2 className="text-3xl font-bold mb-4 text-purple-300">Connect Your Wallet</h2>
-          <p className="text-gray-400 mb-8">Please connect your wallet to view your profile</p>
+          <h2 className="text-3xl font-bold mb-4 text-gradient">Connect Your Wallet</h2>
+          <p className="text-slate-400 mb-8">Please connect your wallet to view your profile</p>
           <Link
             href="/"
-            className="bg-purple-600 hover:bg-purple-700 px-8 py-4 rounded-lg font-bold text-lg transition-all inline-block"
+            className="bg-gradient-to-r from-cyan-500 to-teal-500 hover:from-cyan-600 hover:to-teal-600 px-8 py-4 rounded-xl font-bold text-lg transition-all inline-block shadow-lg shadow-cyan-500/30"
           >
             Go to Game
           </Link>
@@ -95,14 +95,14 @@ export default function ProfilePage() {
     (playerStats as [bigint, bigint, bigint, bigint, bigint, bigint]) || [];
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-[#0a0e27] via-[#151932] to-[#0a0e27] text-white">
+    <div className="min-h-screen bg-gradient-to-b from-[#030712] via-[#0f172a] to-[#030712] text-white">
       <div className="container mx-auto px-4 py-8 max-w-6xl">
         {/* Header */}
-        <div className="text-center mb-8">
-          <h1 className="text-5xl font-bold mb-3 bg-gradient-to-r from-purple-400 to-blue-400 bg-clip-text text-transparent">
+        <div className="text-center mb-8 animate-slide-up">
+          <h1 className="text-5xl font-bold mb-3 text-gradient">
             Player Profile
           </h1>
-          <p className="text-gray-400 text-lg font-mono">
+          <p className="text-slate-400 text-lg font-mono">
             {formatAddress(address)}
           </p>
         </div>
@@ -111,19 +111,19 @@ export default function ProfilePage() {
         <div className="flex justify-center gap-4 mb-8">
           <Link
             href="/"
-            className="bg-[#1e2139] hover:bg-[#252941] border border-purple-500/30 px-6 py-3 rounded-lg font-semibold transition-all"
+            className="glass-card hover:border-cyan-500/50 px-6 py-3 rounded-xl font-semibold transition-all hover:scale-105"
           >
             ← Back to Game
           </Link>
           <Link
             href="/leaderboard"
-            className="bg-[#1e2139] hover:bg-[#252941] border border-purple-500/30 px-6 py-3 rounded-lg font-semibold transition-all"
+            className="glass-card hover:border-cyan-500/50 px-6 py-3 rounded-xl font-semibold transition-all hover:scale-105"
           >
             🏆 Leaderboard
           </Link>
           <Link
             href="/badges"
-            className="bg-[#1e2139] hover:bg-[#252941] border border-purple-500/30 px-6 py-3 rounded-lg font-semibold transition-all"
+            className="glass-card hover:border-cyan-500/50 px-6 py-3 rounded-xl font-semibold transition-all hover:scale-105"
           >
             🏅 Badges
           </Link>
@@ -131,44 +131,44 @@ export default function ProfilePage() {
 
         {loadingStats ? (
           <div className="flex justify-center items-center py-20">
-            <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-purple-500"></div>
+            <div className="animate-spin rounded-full h-16 w-16 border-4 border-cyan-500 border-t-transparent"></div>
           </div>
         ) : playerStats ? (
           <>
             {/* Main Stats Grid */}
             <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
               {/* Total Score */}
-              <div className="bg-gradient-to-br from-purple-900/40 to-purple-800/40 border-2 border-purple-500 rounded-xl p-6 text-center transform hover:scale-105 transition-all">
+              <div className="glass-card border-2 border-cyan-500/30 rounded-2xl p-6 text-center transform hover:scale-105 transition-all animate-slide-up">
                 <div className="text-4xl mb-2">🎯</div>
-                <p className="text-sm text-gray-400 mb-1">Total Score</p>
-                <p className="text-3xl font-bold text-purple-300">
+                <p className="text-sm text-slate-400 mb-1">Total Score</p>
+                <p className="text-3xl font-bold text-gradient">
                   {Number(totalScore).toLocaleString()}
                 </p>
               </div>
 
               {/* Total Coins */}
-              <div className="bg-gradient-to-br from-amber-900/40 to-amber-800/40 border-2 border-amber-500 rounded-xl p-6 text-center transform hover:scale-105 transition-all">
+              <div className="glass-card border-2 border-orange-500/30 rounded-2xl p-6 text-center transform hover:scale-105 transition-all animate-slide-up" style={{ animationDelay: '100ms' }}>
                 <div className="text-4xl mb-2">💰</div>
-                <p className="text-sm text-gray-400 mb-1">Total Coins</p>
-                <p className="text-3xl font-bold text-amber-300">
+                <p className="text-sm text-slate-400 mb-1">Total Coins</p>
+                <p className="text-3xl font-bold text-gradient-warm">
                   {Number(totalCoins).toLocaleString()}
                 </p>
               </div>
 
               {/* Highest Level */}
-              <div className="bg-gradient-to-br from-blue-900/40 to-blue-800/40 border-2 border-blue-500 rounded-xl p-6 text-center transform hover:scale-105 transition-all">
+              <div className="glass-card border-2 border-blue-500/30 rounded-2xl p-6 text-center transform hover:scale-105 transition-all animate-slide-up" style={{ animationDelay: '200ms' }}>
                 <div className="text-4xl mb-2">🎮</div>
-                <p className="text-sm text-gray-400 mb-1">Highest Level</p>
+                <p className="text-sm text-slate-400 mb-1">Highest Level</p>
                 <p className="text-3xl font-bold text-blue-300">
                   {Number(highestLevel)}
                 </p>
               </div>
 
               {/* Games Played */}
-              <div className="bg-gradient-to-br from-green-900/40 to-green-800/40 border-2 border-green-500 rounded-xl p-6 text-center transform hover:scale-105 transition-all">
+              <div className="glass-card border-2 border-emerald-500/30 rounded-2xl p-6 text-center transform hover:scale-105 transition-all animate-slide-up" style={{ animationDelay: '300ms' }}>
                 <div className="text-4xl mb-2">🕹️</div>
-                <p className="text-sm text-gray-400 mb-1">Games Played</p>
-                <p className="text-3xl font-bold text-green-300">
+                <p className="text-sm text-slate-400 mb-1">Games Played</p>
+                <p className="text-3xl font-bold text-emerald-300">
                   {Number(gamesPlayed)}
                 </p>
               </div>
@@ -177,16 +177,16 @@ export default function ProfilePage() {
             {/* Rank and Badges */}
             <div className="grid md:grid-cols-2 gap-6 mb-8">
               {/* Global Rank */}
-              <div className="bg-[#1e2139] border-2 border-purple-500/30 rounded-xl p-8">
-                <h3 className="text-2xl font-bold mb-6 text-purple-300 flex items-center gap-3">
+              <div className="glass-card border-2 border-cyan-500/30 rounded-2xl p-8">
+                <h3 className="text-2xl font-bold mb-6 text-cyan-300 flex items-center gap-3">
                   <span>🏆</span> Global Ranking
                 </h3>
                 {rank ? (
                   <div className="text-center">
-                    <p className="text-6xl font-bold bg-gradient-to-r from-yellow-400 to-orange-400 bg-clip-text text-transparent mb-2">
+                    <p className="text-6xl font-bold text-gradient mb-2">
                       #{rank}
                     </p>
-                    <p className="text-gray-400">
+                    <p className="text-slate-400">
                       {rank === 1 && '🥇 You\'re #1!'}
                       {rank === 2 && '🥈 Almost there!'}
                       {rank === 3 && '🥉 Great job!'}
@@ -195,7 +195,7 @@ export default function ProfilePage() {
                     </p>
                   </div>
                 ) : (
-                  <div className="text-center text-gray-500">
+                  <div className="text-center text-slate-500">
                     <p className="text-2xl mb-2">Not ranked yet</p>
                     <p className="text-sm">Play more to get ranked!</p>
                   </div>
@@ -203,25 +203,25 @@ export default function ProfilePage() {
               </div>
 
               {/* Badge Collection */}
-              <div className="bg-[#1e2139] border-2 border-amber-500/30 rounded-xl p-8">
-                <h3 className="text-2xl font-bold mb-6 text-amber-300 flex items-center gap-3">
+              <div className="glass-card border-2 border-orange-500/30 rounded-2xl p-8">
+                <h3 className="text-2xl font-bold mb-6 text-orange-300 flex items-center gap-3">
                   <span>🏅</span> Badge Collection
                 </h3>
                 <div className="text-center mb-4">
-                  <p className="text-6xl font-bold text-amber-400 mb-2">
+                  <p className="text-6xl font-bold text-gradient-warm mb-2">
                     {Number(badgeCount)}
                   </p>
-                  <p className="text-gray-400">
+                  <p className="text-slate-400">
                     out of 20 badges earned
                   </p>
                 </div>
-                <div className="w-full bg-[#252941] rounded-full h-3 mb-2">
+                <div className="w-full bg-slate-800 rounded-full h-3 mb-2">
                   <div
-                    className="bg-gradient-to-r from-amber-500 to-orange-500 h-3 rounded-full transition-all"
+                    className="bg-gradient-to-r from-orange-500 to-amber-500 h-3 rounded-full transition-all"
                     style={{ width: `${(Number(badgeCount) / 20) * 100}%` }}
                   ></div>
                 </div>
-                <p className="text-center text-xs text-gray-500">
+                <p className="text-center text-xs text-slate-500">
                   {Math.round((Number(badgeCount) / 20) * 100)}% complete
                 </p>
               </div>
@@ -229,18 +229,18 @@ export default function ProfilePage() {
 
             {/* Recent Badges */}
             {recentBadges.length > 0 && (
-              <div className="bg-[#1e2139] border-2 border-purple-500/30 rounded-xl p-8 mb-8">
-                <h3 className="text-2xl font-bold mb-6 text-purple-300 flex items-center gap-3">
+              <div className="glass-card border-2 border-cyan-500/30 rounded-2xl p-8 mb-8">
+                <h3 className="text-2xl font-bold mb-6 text-cyan-300 flex items-center gap-3">
                   <span>✨</span> Recently Earned Badges
                 </h3>
                 <div className="grid md:grid-cols-3 gap-4">
                   {recentBadges.map(badgeId => (
                     <div
                       key={badgeId}
-                      className="bg-[#252941] rounded-lg p-4 border border-amber-500/30 text-center transform hover:scale-105 transition-all"
+                      className="bg-slate-800/50 rounded-xl p-4 border border-orange-500/30 text-center transform hover:scale-105 transition-all"
                     >
                       <div className="text-5xl mb-2">{getBadgeIcon(badgeId)}</div>
-                      <p className="font-bold text-amber-400">{getBadgeName(badgeId)}</p>
+                      <p className="font-bold text-gradient-warm">{getBadgeName(badgeId)}</p>
                     </div>
                   ))}
                 </div>
@@ -248,29 +248,29 @@ export default function ProfilePage() {
             )}
 
             {/* Activity Stats */}
-            <div className="bg-[#1e2139] border-2 border-purple-500/30 rounded-xl p-8">
-              <h3 className="text-2xl font-bold mb-6 text-purple-300 flex items-center gap-3">
+            <div className="glass-card border-2 border-cyan-500/30 rounded-2xl p-8">
+              <h3 className="text-2xl font-bold mb-6 text-cyan-300 flex items-center gap-3">
                 <span>📊</span> Activity Stats
               </h3>
               <div className="space-y-4">
                 <div className="flex justify-between items-center">
-                  <span className="text-gray-400">Average Score per Game</span>
-                  <span className="text-xl font-bold text-purple-300">
+                  <span className="text-slate-400">Average Score per Game</span>
+                  <span className="text-xl font-bold text-gradient">
                     {Number(gamesPlayed) > 0
                       ? Math.round(Number(totalScore) / Number(gamesPlayed)).toLocaleString()
                       : 0}
                   </span>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span className="text-gray-400">Average Coins per Game</span>
-                  <span className="text-xl font-bold text-amber-400">
+                  <span className="text-slate-400">Average Coins per Game</span>
+                  <span className="text-xl font-bold text-gradient-warm">
                     {Number(gamesPlayed) > 0
                       ? Math.round(Number(totalCoins) / Number(gamesPlayed)).toLocaleString()
                       : 0}
                   </span>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span className="text-gray-400">Last Played</span>
+                  <span className="text-slate-400">Last Played</span>
                   <span className="text-xl font-bold text-blue-300">
                     {lastPlayed && Number(lastPlayed) > 0
                       ? new Date(Number(lastPlayed) * 1000).toLocaleDateString()
@@ -284,20 +284,20 @@ export default function ProfilePage() {
             <div className="mt-8 text-center">
               <Link
                 href="/"
-                className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white px-12 py-5 rounded-xl text-xl font-bold transition-all transform hover:scale-105 inline-block shadow-lg"
+                className="bg-gradient-to-r from-cyan-500 to-teal-500 hover:from-cyan-600 hover:to-teal-600 text-white px-12 py-5 rounded-xl text-xl font-bold transition-all transform hover:scale-105 inline-block shadow-lg shadow-cyan-500/30"
               >
                 🎮 Play More Games
               </Link>
             </div>
           </>
         ) : (
-          <div className="text-center py-20">
+          <div className="text-center py-20 animate-bounce-in">
             <div className="text-6xl mb-4">🎮</div>
-            <h3 className="text-2xl font-bold text-gray-400 mb-2">No Game History</h3>
-            <p className="text-gray-500 mb-6">Start playing to build your profile!</p>
+            <h3 className="text-2xl font-bold text-slate-400 mb-2">No Game History</h3>
+            <p className="text-slate-500 mb-6">Start playing to build your profile!</p>
             <Link
               href="/"
-              className="bg-purple-600 hover:bg-purple-700 px-8 py-4 rounded-lg font-bold text-lg transition-all inline-block"
+              className="bg-gradient-to-r from-cyan-500 to-teal-500 hover:from-cyan-600 hover:to-teal-600 px-8 py-4 rounded-xl font-bold text-lg transition-all inline-block shadow-lg shadow-cyan-500/30"
             >
               Play Now
             </Link>
