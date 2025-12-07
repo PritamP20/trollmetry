@@ -78,6 +78,7 @@ const MathDevilGame = ({ onGameEnd }: { onGameEnd: (level: number, score: number
   const [trollMessage, setTrollMessage] = useState<string>('');
   const [runFrame, setRunFrame] = useState(0);
   const [scoredOnCorrectPlatform, setScoredOnCorrectPlatform] = useState(false);
+  const [gameStarted, setGameStarted] = useState(false); // Player frozen until first input
 
   // Canvas settings
   const [canvasWidth, setCanvasWidth] = useState(480);
@@ -89,15 +90,14 @@ const MathDevilGame = ({ onGameEnd }: { onGameEnd: (level: number, score: number
   const JUMP_FORCE = -14;
   const MOVE_SPEED = 5;
 
-  // Adjust canvas size - compact for mobile/Farcaster
+  // Adjust canvas size - balanced for mobile/Farcaster
   useEffect(() => {
     const updateCanvasSize = () => {
-      const width = Math.min(window.innerWidth - 24, 480);
-      // Leave room for controls (approx 180px) and nav (60px)
-      const availableHeight = window.innerHeight - 260;
-      const height = Math.min(availableHeight, 400);
+      const width = Math.min(window.innerWidth - 16, 500);
+      // Use 55% of viewport for canvas, leave room for controls
+      const height = Math.min(window.innerHeight * 0.55, 550);
       setCanvasWidth(width);
-      setCanvasHeight(Math.max(height, 280)); // Minimum height
+      setCanvasHeight(Math.max(height, 350));
     };
     updateCanvasSize();
     window.addEventListener('resize', updateCanvasSize);
@@ -666,6 +666,11 @@ const MathDevilGame = ({ onGameEnd }: { onGameEnd: (level: number, score: number
 
     const gameLoop = setInterval(() => {
       setGameState(prev => {
+        // If game hasn't started (no user input yet), keep player frozen
+        if (!gameStarted) {
+          return prev; // No changes, player stays in place
+        }
+
         let newY = prev.playerY + velocityY;
         let newX = prev.playerX + velocityX;
         let newVelocityY = velocityY + GRAVITY;
@@ -857,12 +862,13 @@ const MathDevilGame = ({ onGameEnd }: { onGameEnd: (level: number, score: number
     }, 1000 / 60);
 
     return () => clearInterval(gameLoop);
-  }, [velocityY, velocityX, isJumping, platforms, gameState.gameOver, isInitialized]);
+  }, [velocityY, velocityX, isJumping, platforms, gameState.gameOver, isInitialized, gameStarted]);
 
   // Controls
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (gameState.gameOver) return;
+      setGameStarted(true); // Start game on any key press
 
       switch (e.key) {
         case 'ArrowLeft':
@@ -961,22 +967,22 @@ const MathDevilGame = ({ onGameEnd }: { onGameEnd: (level: number, score: number
             <div className="flex flex-col items-center">
               <div className="flex gap-2">
                 <button
-                  onTouchStart={() => setVelocityX(-MOVE_SPEED)}
+                  onTouchStart={() => { setGameStarted(true); setVelocityX(-MOVE_SPEED); }}
                   onTouchEnd={() => setVelocityX(0)}
-                  onMouseDown={() => setVelocityX(-MOVE_SPEED)}
+                  onMouseDown={() => { setGameStarted(true); setVelocityX(-MOVE_SPEED); }}
                   onMouseUp={() => setVelocityX(0)}
                   onMouseLeave={() => setVelocityX(0)}
-                  className="bg-slate-800 hover:bg-slate-700 border-2 border-cyan-500/30 px-4 py-4 rounded-lg text-white text-xl font-bold active:bg-cyan-600 transition-all"
+                  className="bg-slate-800 hover:bg-slate-700 border-2 border-cyan-500/30 px-5 py-5 rounded-lg text-white text-xl font-bold active:bg-cyan-600 transition-all"
                 >
                   ←
                 </button>
                 <button
-                  onTouchStart={() => setVelocityX(MOVE_SPEED)}
+                  onTouchStart={() => { setGameStarted(true); setVelocityX(MOVE_SPEED); }}
                   onTouchEnd={() => setVelocityX(0)}
-                  onMouseDown={() => setVelocityX(MOVE_SPEED)}
+                  onMouseDown={() => { setGameStarted(true); setVelocityX(MOVE_SPEED); }}
                   onMouseUp={() => setVelocityX(0)}
                   onMouseLeave={() => setVelocityX(0)}
-                  className="bg-slate-800 hover:bg-slate-700 border-2 border-cyan-500/30 px-4 py-4 rounded-lg text-white text-xl font-bold active:bg-cyan-600 transition-all"
+                  className="bg-slate-800 hover:bg-slate-700 border-2 border-cyan-500/30 px-5 py-5 rounded-lg text-white text-xl font-bold active:bg-cyan-600 transition-all"
                 >
                   →
                 </button>
@@ -985,12 +991,14 @@ const MathDevilGame = ({ onGameEnd }: { onGameEnd: (level: number, score: number
 
             <button
               onTouchStart={() => {
+                setGameStarted(true);
                 if (!isJumping) {
                   setVelocityY(JUMP_FORCE);
                   setIsJumping(true);
                 }
               }}
               onMouseDown={() => {
+                setGameStarted(true);
                 if (!isJumping) {
                   setVelocityY(JUMP_FORCE);
                   setIsJumping(true);
@@ -998,7 +1006,7 @@ const MathDevilGame = ({ onGameEnd }: { onGameEnd: (level: number, score: number
               }}
               className="bg-gradient-to-br from-cyan-500 to-teal-500 border-3 border-cyan-300/50 px-8 py-6 rounded-full text-white text-lg font-bold active:from-cyan-600 active:to-teal-600 shadow-lg shadow-cyan-500/30 transition-all"
             >
-              JUMP
+              {gameStarted ? 'JUMP' : 'START'}
             </button>
           </div>
         </div>
