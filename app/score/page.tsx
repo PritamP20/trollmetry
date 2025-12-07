@@ -46,7 +46,7 @@ export default function ScorePage() {
   const { data: badgeCount } = useReadContract({
     address: GAME_CONTRACT_ADDRESS,
     abi: GAME_CONTRACT_ABI,
-    functionName: 'badgeCount',
+    functionName: 'getTotalBadgeTypes',
   });
 
   // Load all badge details

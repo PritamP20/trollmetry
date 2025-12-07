@@ -44,15 +44,10 @@ export default function Home() {
       )}
       <div className="bg-[#0f0f23] min-h-screen">
         <div className="container mx-auto max-w-lg px-2">
-          <div className="py-2">
-            <div className="text-center mb-2">
-              <h1 className="text-xl md:text-2xl font-bold text-[#e74c3c] mb-1">Math Devil Game</h1>
-              <p className="text-gray-400 text-xs mb-2">Connect wallet to save score on-chain</p>
-            </div>
-            <div className="flex justify-center">
-              <div className="w-full max-w-xs">
-                <WalletActions />
-              </div>
+          <div className="py-1 flex items-center justify-between">
+            <h1 className="text-sm font-bold text-[#e74c3c]">Math Devil</h1>
+            <div className="flex-shrink-0">
+              <WalletActions />
             </div>
           </div>
         </div>

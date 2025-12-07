@@ -10,13 +10,13 @@ export default function GameWrapper() {
   const { address, isConnected } = useAccount();
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [gameScore, setGameScore] = useState<{ level: number; score: number } | null>(null);
+  const [gameScore, setGameScore] = useState<{ level: number; score: number; coins: number } | null>(null);
 
   const { writeContract, data: hash, error, isPending } = useWriteContract();
   const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({ hash });
 
-  const handleGameEnd = async (level: number, score: number) => {
-    setGameScore({ level, score });
+  const handleGameEnd = async (level: number, score: number, coins: number) => {
+    setGameScore({ level, score, coins });
 
     if (!isConnected || !address) {
       alert('Please connect your wallet first!');
@@ -25,8 +25,8 @@ export default function GameWrapper() {
 
     // Check if contract address is set
     if (!GAME_CONTRACT_ADDRESS || GAME_CONTRACT_ADDRESS === '0x0000000000000000000000000000000000000000') {
-      console.log('Contract not deployed yet. Score:', { level, score });
-      alert(`Game Over! Level: ${level}, Score: ${score}\n\nContract not deployed yet. Redirecting to leaderboard...`);
+      console.log('Contract not deployed yet. Score:', { level, score, coins });
+      alert(`Game Over! Level: ${level}, Score: ${score}, Coins: ${coins}\n\nContract not deployed yet. Redirecting to leaderboard...`);
       router.push('/score');
       return;
     }
@@ -37,7 +37,7 @@ export default function GameWrapper() {
         address: GAME_CONTRACT_ADDRESS,
         abi: GAME_CONTRACT_ABI,
         functionName: 'submitScore',
-        args: [BigInt(level), BigInt(score)],
+        args: [BigInt(level), BigInt(score), BigInt(coins)],
       });
     } catch (err) {
       console.error('Error submitting score:', err);
@@ -65,6 +65,7 @@ export default function GameWrapper() {
             <div className="space-y-2 text-lg">
               <p>Level: <span className="text-yellow-400 font-bold">{gameScore.level}</span></p>
               <p>Score: <span className="text-green-400 font-bold">{gameScore.score}</span></p>
+              <p>Coins: <span className="text-yellow-400 font-bold">{gameScore.coins}</span></p>
             </div>
           )}
           {isPending && <p className="mt-4 text-sm text-gray-400">Waiting for wallet confirmation...</p>}

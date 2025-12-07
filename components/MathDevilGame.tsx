@@ -2,23 +2,29 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { useAccount } from 'wagmi';
+import Link from 'next/link';
+import { theme } from '@/lib/theme';
 
 interface GameState {
   level: number;
   score: number;
+  coins: number;
   lives: number;
   currentQuestion: MathQuestion | null;
   playerX: number;
   playerY: number;
   gameOver: boolean;
   won: boolean;
+  isRunning: boolean;
+  facingRight: boolean;
 }
 
 interface MathQuestion {
   question: string;
-  answer: number;
-  options: number[];
-  type: 'add' | 'subtract' | 'multiply' | 'divide';
+  correctMathAnswer: number;
+  trollAnswer: number;
+  wrongAnswer: number;
+  displayQuestion: string;
 }
 
 interface Platform {
@@ -27,48 +33,67 @@ interface Platform {
   width: number;
   height: number;
   isFake?: boolean;
-  willDisappear?: boolean;
+  willMove?: boolean;
+  isMoving?: boolean;
+  targetX?: number;
+  originalX?: number;
   isSpike?: boolean;
   mathOption?: number;
+  isCorrect?: boolean;
+  disappearing?: boolean;
+  alpha?: number;
 }
 
-const MathDevilGame = ({ onGameEnd }: { onGameEnd: (level: number, score: number) => void }) => {
+interface Coin {
+  x: number;
+  y: number;
+  collected: boolean;
+  pulse: number;
+}
+
+const MathDevilGame = ({ onGameEnd }: { onGameEnd: (level: number, score: number, coins: number) => void }) => {
   const { address, isConnected } = useAccount();
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const animationFrameRef = useRef<number>();
+
   const [gameState, setGameState] = useState<GameState>({
     level: 1,
     score: 0,
+    coins: 0,
     lives: 3,
     currentQuestion: null,
     playerX: 50,
     playerY: 300,
     gameOver: false,
     won: false,
+    isRunning: false,
+    facingRight: true,
   });
 
   const [platforms, setPlatforms] = useState<Platform[]>([]);
+  const [coins, setCoins] = useState<Coin[]>([]);
   const [velocityY, setVelocityY] = useState(0);
   const [velocityX, setVelocityX] = useState(0);
   const [isJumping, setIsJumping] = useState(false);
-  const [showQuestion, setShowQuestion] = useState(false);
-  const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
   const [trollMessage, setTrollMessage] = useState<string>('');
+  const [runFrame, setRunFrame] = useState(0);
+  const [scoredOnCorrectPlatform, setScoredOnCorrectPlatform] = useState(false);
 
-  // Responsive canvas size
-  const [canvasWidth, setCanvasWidth] = useState(350);
-  const [canvasHeight, setCanvasHeight] = useState(400);
+  // Canvas settings
+  const [canvasWidth, setCanvasWidth] = useState(480);
+  const [canvasHeight, setCanvasHeight] = useState(600);
   const CANVAS_WIDTH = canvasWidth;
   const CANVAS_HEIGHT = canvasHeight;
-  const PLAYER_SIZE = 20;
-  const GRAVITY = 0.5;
-  const JUMP_FORCE = -12;
+  const PLAYER_SIZE = 28;
+  const GRAVITY = 0.6;
+  const JUMP_FORCE = -14;
   const MOVE_SPEED = 5;
 
-  // Adjust canvas size on mount
+  // Adjust canvas size
   useEffect(() => {
     const updateCanvasSize = () => {
-      const width = Math.min(window.innerWidth - 32, 400);
-      const height = Math.min(window.innerHeight * 0.45, 450);
+      const width = Math.min(window.innerWidth - 32, 520);
+      const height = Math.min(window.innerHeight * 0.7, 680);
       setCanvasWidth(width);
       setCanvasHeight(height);
     };
@@ -78,108 +103,217 @@ const MathDevilGame = ({ onGameEnd }: { onGameEnd: (level: number, score: number
   }, []);
 
   const generateMathQuestion = (level: number): MathQuestion => {
-    const types: ('add' | 'subtract' | 'multiply' | 'divide')[] = ['add', 'subtract', 'multiply', 'divide'];
-    const type = types[Math.floor(Math.random() * Math.min(level, types.length))];
+    const trollTypes = [
+      // PEMDAS troll
+      () => {
+        const a = Math.floor(Math.random() * 8) + 12;
+        const b = Math.floor(Math.random() * 4) + 2;
+        const c = Math.floor(Math.random() * 6) + 3;
+        const correctAnswer = a - b * c;
+        const trollAnswer = (a - b) * c;
+        const wrongAnswer = a + b - c;
+        return {
+          question: `${a} - ${b} × ${c}`,
+          correctMathAnswer: correctAnswer,
+          trollAnswer: trollAnswer,
+          wrongAnswer: wrongAnswer,
+          displayQuestion: `${a} - ${b} × ${c} = ?`
+        };
+      },
+      // Division troll
+      () => {
+        const a = Math.floor(Math.random() * 15) + 15;
+        const c = Math.floor(Math.random() * 3) + 2;
+        const b = c * (Math.floor(Math.random() * 6) + 3);
+        const correctAnswer = a + b / c;
+        const trollAnswer = Math.floor((a + b) / c);
+        const wrongAnswer = a - b / c;
+        return {
+          question: `${a} + ${b} ÷ ${c}`,
+          correctMathAnswer: correctAnswer,
+          trollAnswer: trollAnswer,
+          wrongAnswer: Math.floor(wrongAnswer),
+          displayQuestion: `${a} + ${b} ÷ ${c} = ?`
+        };
+      },
+    ];
 
-    let num1, num2, answer, question;
-
-    switch (type) {
-      case 'add':
-        num1 = Math.floor(Math.random() * (10 * level)) + 1;
-        num2 = Math.floor(Math.random() * (10 * level)) + 1;
-        answer = num1 + num2;
-        question = `${num1} + ${num2} = ?`;
-        break;
-      case 'subtract':
-        num1 = Math.floor(Math.random() * (10 * level)) + 10;
-        num2 = Math.floor(Math.random() * num1);
-        answer = num1 - num2;
-        question = `${num1} - ${num2} = ?`;
-        break;
-      case 'multiply':
-        num1 = Math.floor(Math.random() * (5 + level)) + 1;
-        num2 = Math.floor(Math.random() * (5 + level)) + 1;
-        answer = num1 * num2;
-        question = `${num1} × ${num2} = ?`;
-        break;
-      case 'divide':
-        num2 = Math.floor(Math.random() * 10) + 1;
-        answer = Math.floor(Math.random() * 10) + 1;
-        num1 = num2 * answer;
-        question = `${num1} ÷ ${num2} = ?`;
-        break;
-    }
-
-    const wrongAnswers = Array.from({ length: 3 }, () => {
-      const offset = Math.floor(Math.random() * 10) - 5;
-      return answer + offset;
-    }).filter(a => a !== answer);
-
-    const options = [answer, ...wrongAnswers.slice(0, 2)].sort(() => Math.random() - 0.5);
-
-    return { question, answer, options, type };
+    const questionGenerator = trollTypes[Math.floor(Math.random() * trollTypes.length)];
+    return questionGenerator();
   };
 
   const generatePlatforms = (level: number, question: MathQuestion) => {
     const newPlatforms: Platform[] = [];
 
     // Ground
-    newPlatforms.push({ x: 0, y: CANVAS_HEIGHT - 20, width: CANVAS_WIDTH, height: 20 });
-
-    // Starting platform
-    newPlatforms.push({ x: 20, y: CANVAS_HEIGHT - 100, width: 100, height: 15 });
-
-    // Math answer platforms (troll mechanics!)
-    question.options.forEach((option, index) => {
-      const x = 200 + (index * 200);
-      const y = CANVAS_HEIGHT - 200 - (Math.random() * 100);
-      const isFake = option !== question.answer;
-      const willDisappear = Math.random() > 0.5 && level > 2;
-
-      newPlatforms.push({
-        x,
-        y,
-        width: 80,
-        height: 15,
-        isFake: isFake && level > 1,
-        willDisappear: willDisappear && !isFake,
-        mathOption: option,
-      });
+    newPlatforms.push({
+      x: 0,
+      y: CANVAS_HEIGHT - 30,
+      width: CANVAS_WIDTH,
+      height: 30
     });
 
-    // Troll platforms
+    // Starting safe zone
+    newPlatforms.push({
+      x: 30,
+      y: CANVAS_HEIGHT - 100,
+      width: 140,
+      height: 18
+    });
+
+    // First jump platform
+    newPlatforms.push({
+      x: 180,
+      y: CANVAS_HEIGHT - 160,
+      width: 100,
+      height: 18
+    });
+
+    // Math answer platforms (THE TROLL ZONE)
+    const mathY = CANVAS_HEIGHT - 260;
+    const mathSpacing = (CANVAS_WIDTH - 140) / 3;
+
+    // Troll answer platform (CORRECT for game)
+    const trollPlatformX = 50;
+    const shouldMove = level > 3 && Math.random() > 0.5;
+    newPlatforms.push({
+      x: trollPlatformX,
+      y: mathY,
+      width: 110,
+      height: 18,
+      mathOption: question.trollAnswer,
+      isCorrect: true,
+      willMove: shouldMove,
+      originalX: trollPlatformX,
+      targetX: shouldMove ? trollPlatformX + 120 : undefined,
+    });
+
+    // Mathematically correct answer (WRONG for game - fake)
+    newPlatforms.push({
+      x: 50 + mathSpacing,
+      y: mathY - 15,
+      width: 110,
+      height: 18,
+      mathOption: question.correctMathAnswer,
+      isCorrect: false,
+      isFake: true,
+    });
+
+    // Wrong answer platform (also fake)
+    newPlatforms.push({
+      x: 50 + mathSpacing * 2,
+      y: mathY + 15,
+      width: 110,
+      height: 18,
+      mathOption: question.wrongAnswer,
+      isCorrect: false,
+      isFake: true,
+    });
+
+    // Coins placement
+    const newCoins: Coin[] = [];
+
+    // Path coins
+    newCoins.push({ x: 100, y: CANVAS_HEIGHT - 140, collected: false, pulse: 0 });
+    newCoins.push({ x: 230, y: CANVAS_HEIGHT - 200, collected: false, pulse: 0 });
+
+    // Above math platforms
+    for (let i = 0; i < 3; i++) {
+      newCoins.push({
+        x: 90 + mathSpacing * i,
+        y: mathY - 60,
+        collected: false,
+        pulse: i * 20,
+      });
+    }
+
+    // Random bonus coins
+    for (let i = 0; i < Math.min(level, 5); i++) {
+      newCoins.push({
+        x: 60 + Math.random() * (CANVAS_WIDTH - 120),
+        y: 120 + Math.random() * 150,
+        collected: false,
+        pulse: i * 15,
+      });
+    }
+    setCoins(newCoins);
+
+    // Path after math puzzle
+    newPlatforms.push({
+      x: CANVAS_WIDTH / 2 - 70,
+      y: CANVAS_HEIGHT - 350,
+      width: 140,
+      height: 18,
+    });
+
+    // Intermediate platforms
     if (level > 1) {
-      // Fake safe-looking platforms
-      for (let i = 0; i < level; i++) {
+      newPlatforms.push({
+        x: CANVAS_WIDTH - 280,
+        y: CANVAS_HEIGHT - 380,
+        width: 90,
+        height: 18,
+      });
+
+      // Disappearing platform troll
+      if (level > 4) {
         newPlatforms.push({
-          x: Math.random() * (CANVAS_WIDTH - 100),
-          y: Math.random() * (CANVAS_HEIGHT - 200) + 50,
+          x: CANVAS_WIDTH / 2 + 100,
+          y: CANVAS_HEIGHT - 320,
           width: 80,
-          height: 15,
-          isFake: Math.random() > 0.6,
+          height: 18,
+          disappearing: true,
+          alpha: 1,
         });
       }
     }
 
-    // Spikes (troll obstacles)
+    // Upper path to exit
+    newPlatforms.push({
+      x: CANVAS_WIDTH - 220,
+      y: CANVAS_HEIGHT - 450,
+      width: 120,
+      height: 18,
+    });
+
+    // Fake platform troll (level 3+)
     if (level > 2) {
-      for (let i = 0; i < Math.floor(level / 2); i++) {
-        newPlatforms.push({
-          x: Math.random() * (CANVAS_WIDTH - 50),
-          y: CANVAS_HEIGHT - 50 - (Math.random() * 200),
-          width: 40,
-          height: 20,
-          isSpike: true,
-        });
-      }
+      newPlatforms.push({
+        x: 220,
+        y: CANVAS_HEIGHT - 210,
+        width: 75,
+        height: 18,
+        isFake: true,
+      });
+    }
+
+    // Spikes (strategic placement)
+    if (level > 2) {
+      newPlatforms.push({
+        x: CANVAS_WIDTH / 2 - 25,
+        y: CANVAS_HEIGHT - 50,
+        width: 50,
+        height: 25,
+        isSpike: true,
+      });
+    }
+
+    if (level > 4) {
+      newPlatforms.push({
+        x: CANVAS_WIDTH - 180,
+        y: CANVAS_HEIGHT - 320,
+        width: 45,
+        height: 25,
+        isSpike: true,
+      });
     }
 
     // Exit door
     newPlatforms.push({
-      x: CANVAS_WIDTH - 80,
-      y: CANVAS_HEIGHT - 300,
-      width: 60,
-      height: 80,
+      x: CANVAS_WIDTH - 90,
+      y: CANVAS_HEIGHT - 540,
+      width: 70,
+      height: 85,
     });
 
     setPlatforms(newPlatforms);
@@ -191,18 +325,36 @@ const MathDevilGame = ({ onGameEnd }: { onGameEnd: (level: number, score: number
     setGameState(prev => ({
       ...prev,
       currentQuestion: question,
-      playerX: 50,
-      playerY: 300,
+      playerX: 60,
+      playerY: CANVAS_HEIGHT - 130,
     }));
-    setShowQuestion(true);
     setVelocityY(0);
     setVelocityX(0);
+    setIsJumping(false);
+    setScoredOnCorrectPlatform(false);
   };
 
   useEffect(() => {
     initLevel();
   }, []);
 
+  // Animation loop for coin pulse and run animation
+  useEffect(() => {
+    const animationInterval = setInterval(() => {
+      setCoins(prev => prev.map(coin => ({
+        ...coin,
+        pulse: (coin.pulse + 1) % 60,
+      })));
+
+      if (Math.abs(velocityX) > 0 && !isJumping) {
+        setRunFrame(prev => (prev + 1) % 8);
+      }
+    }, 100);
+
+    return () => clearInterval(animationInterval);
+  }, [velocityX, isJumping]);
+
+  // Draw game
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -211,83 +363,289 @@ const MathDevilGame = ({ onGameEnd }: { onGameEnd: (level: number, score: number
     if (!ctx) return;
 
     const draw = () => {
-      // Clear canvas
-      ctx.fillStyle = '#1a1a2e';
+      // Background gradient
+      const bgGradient = ctx.createLinearGradient(0, 0, 0, CANVAS_HEIGHT);
+      bgGradient.addColorStop(0, theme.bg.primary);
+      bgGradient.addColorStop(0.5, theme.bg.secondary);
+      bgGradient.addColorStop(1, theme.bg.tertiary);
+      ctx.fillStyle = bgGradient;
       ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+
+      // Draw grid pattern (subtle)
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.02)';
+      ctx.lineWidth = 1;
+      for (let x = 0; x < CANVAS_WIDTH; x += 40) {
+        ctx.beginPath();
+        ctx.moveTo(x, 0);
+        ctx.lineTo(x, CANVAS_HEIGHT);
+        ctx.stroke();
+      }
+      for (let y = 0; y < CANVAS_HEIGHT; y += 40) {
+        ctx.beginPath();
+        ctx.moveTo(0, y);
+        ctx.lineTo(CANVAS_WIDTH, y);
+        ctx.stroke();
+      }
+
+      // Question area
+      if (gameState.currentQuestion) {
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.4)';
+        ctx.fillRect(0, 10, CANVAS_WIDTH, 70);
+
+        ctx.fillStyle = theme.text.secondary;
+        ctx.font = 'bold 14px system-ui';
+        ctx.textAlign = 'center';
+        ctx.fillText('Choose the TROLL answer:', CANVAS_WIDTH / 2, 30);
+
+        ctx.fillStyle = theme.accent.secondary;
+        ctx.font = 'bold 28px system-ui';
+        ctx.fillText(gameState.currentQuestion.displayQuestion, CANVAS_WIDTH / 2, 62);
+      }
+
+      // Draw coins
+      coins.forEach(coin => {
+        if (!coin.collected) {
+          const scale = 1 + Math.sin(coin.pulse / 10) * 0.15;
+          const glow = Math.sin(coin.pulse / 10) * 0.3 + 0.7;
+
+          ctx.save();
+          ctx.translate(coin.x, coin.y);
+          ctx.scale(scale, scale);
+
+          // Glow
+          const coinGlow = ctx.createRadialGradient(0, 0, 0, 0, 0, 15);
+          coinGlow.addColorStop(0, `rgba(251, 191, 36, ${glow})`);
+          coinGlow.addColorStop(1, 'rgba(251, 191, 36, 0)');
+          ctx.fillStyle = coinGlow;
+          ctx.beginPath();
+          ctx.arc(0, 0, 15, 0, Math.PI * 2);
+          ctx.fill();
+
+          // Coin
+          ctx.fillStyle = theme.accent.secondary;
+          ctx.beginPath();
+          ctx.arc(0, 0, 10, 0, Math.PI * 2);
+          ctx.fill();
+
+          ctx.strokeStyle = '#fde68a';
+          ctx.lineWidth = 2;
+          ctx.stroke();
+
+          // Symbol
+          ctx.fillStyle = '#78350f';
+          ctx.font = 'bold 12px Arial';
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.fillText('$', 0, 0);
+
+          ctx.restore();
+        }
+      });
 
       // Draw platforms
       platforms.forEach(platform => {
+        ctx.save();
+
         if (platform.isSpike) {
-          // Draw spikes
-          ctx.fillStyle = '#ff4444';
+          // Spike
+          ctx.fillStyle = theme.accent.danger;
+          ctx.shadowColor = theme.accent.danger;
+          ctx.shadowBlur = 15;
           ctx.beginPath();
-          for (let i = 0; i < platform.width; i += 20) {
+          for (let i = 0; i < platform.width; i += 18) {
             ctx.moveTo(platform.x + i, platform.y + platform.height);
-            ctx.lineTo(platform.x + i + 10, platform.y);
-            ctx.lineTo(platform.x + i + 20, platform.y + platform.height);
+            ctx.lineTo(platform.x + i + 9, platform.y);
+            ctx.lineTo(platform.x + i + 18, platform.y + platform.height);
           }
           ctx.fill();
         } else if (platform.mathOption !== undefined) {
           // Math platforms
-          ctx.fillStyle = platform.isFake ? '#ff6b6b' : '#4ecdc4';
+          const alpha = platform.alpha || 1;
+
+          if (platform.isCorrect) {
+            ctx.fillStyle = `rgba(16, 185, 129, ${alpha * 0.3})`; // Green tint
+            ctx.strokeStyle = theme.accent.success;
+            ctx.shadowColor = theme.accent.success;
+            ctx.shadowBlur = 20;
+          } else if (platform.isFake) {
+            ctx.fillStyle = `rgba(239, 68, 68, ${alpha * 0.25})`; // Red tint
+            ctx.strokeStyle = theme.accent.danger;
+            ctx.shadowColor = theme.accent.danger;
+            ctx.shadowBlur = 10;
+          }
+
           ctx.fillRect(platform.x, platform.y, platform.width, platform.height);
-          ctx.fillStyle = '#fff';
-          ctx.font = '20px Arial';
+          ctx.lineWidth = 3;
+          ctx.strokeRect(platform.x, platform.y, platform.width, platform.height);
+
+          // Number
+          ctx.shadowBlur = 0;
+          ctx.fillStyle = theme.text.primary;
+          ctx.font = 'bold 22px system-ui';
           ctx.textAlign = 'center';
-          ctx.fillText(platform.mathOption.toString(), platform.x + platform.width / 2, platform.y - 5);
+          ctx.fillText(platform.mathOption.toString(), platform.x + platform.width / 2, platform.y - 12);
+        } else if (platform.y >= CANVAS_HEIGHT - 100) {
+          // Ground and starting platforms
+          ctx.fillStyle = theme.platform.safe;
+          ctx.fillRect(platform.x, platform.y, platform.width, platform.height);
+
+          ctx.strokeStyle = theme.border.primary;
+          ctx.lineWidth = 2;
+          ctx.strokeRect(platform.x, platform.y, platform.width, platform.height);
         } else {
           // Regular platforms
-          ctx.fillStyle = platform.isFake ? '#95a5a6' : '#2ecc71';
-          if (platform.willDisappear) {
-            ctx.fillStyle = '#f39c12';
-          }
+          const alpha = platform.alpha || 1;
+          ctx.fillStyle = platform.isFake ?
+            `rgba(61, 30, 46, ${alpha})` :
+            platform.disappearing ?
+              `rgba(45, 50, 80, ${alpha})` :
+              theme.platform.safe;
+
           ctx.fillRect(platform.x, platform.y, platform.width, platform.height);
+
+          ctx.strokeStyle = platform.isFake ? theme.accent.danger : theme.border.primary;
+          ctx.lineWidth = 2;
+          ctx.strokeRect(platform.x, platform.y, platform.width, platform.height);
         }
+
+        ctx.restore();
       });
 
-      // Draw exit door
+      // Draw exit
       const exitPlatform = platforms[platforms.length - 1];
       if (exitPlatform) {
-        ctx.fillStyle = '#ffd700';
-        ctx.fillRect(exitPlatform.x, exitPlatform.y, exitPlatform.width, exitPlatform.height);
-        ctx.fillStyle = '#000';
-        ctx.font = '16px Arial';
+        ctx.save();
+
+        // Glow
+        ctx.shadowColor = theme.accent.success;
+        ctx.shadowBlur = 25;
+
+        // Door
+        ctx.fillStyle = theme.game.exit;
+        ctx.fillRect(exitPlatform.x + 5, exitPlatform.y, exitPlatform.width - 10, exitPlatform.height);
+
+        ctx.strokeStyle = '#6ee7b7';
+        ctx.lineWidth = 3;
+        ctx.strokeRect(exitPlatform.x + 5, exitPlatform.y, exitPlatform.width - 10, exitPlatform.height);
+
+        // Text
+        ctx.shadowBlur = 0;
+        ctx.fillStyle = theme.text.primary;
+        ctx.font = 'bold 18px system-ui';
         ctx.textAlign = 'center';
-        ctx.fillText('EXIT', exitPlatform.x + 30, exitPlatform.y + 45);
+        ctx.fillText('EXIT', exitPlatform.x + exitPlatform.width / 2, exitPlatform.y + exitPlatform.height / 2 + 6);
+
+        ctx.restore();
       }
 
-      // Draw player (simple devil character)
-      ctx.fillStyle = '#e74c3c';
-      ctx.fillRect(gameState.playerX, gameState.playerY, PLAYER_SIZE, PLAYER_SIZE);
+      // Draw player with animation
+      ctx.save();
+
+      // Shadow
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
+      ctx.beginPath();
+      ctx.ellipse(gameState.playerX + PLAYER_SIZE / 2, gameState.playerY + PLAYER_SIZE + 2, PLAYER_SIZE / 2, 4, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Player glow
+      ctx.shadowColor = theme.accent.primary;
+      ctx.shadowBlur = 15;
+
+      // Body
+      ctx.fillStyle = theme.game.player;
+      ctx.fillRect(gameState.playerX + 4, gameState.playerY + 8, PLAYER_SIZE - 8, PLAYER_SIZE - 8);
 
       // Horns
-      ctx.fillStyle = '#c0392b';
-      ctx.fillRect(gameState.playerX + 5, gameState.playerY - 5, 8, 8);
-      ctx.fillRect(gameState.playerX + 17, gameState.playerY - 5, 8, 8);
+      ctx.fillStyle = '#6d28d9';
+      ctx.beginPath();
+      ctx.moveTo(gameState.playerX + 8, gameState.playerY + 8);
+      ctx.lineTo(gameState.playerX + 8, gameState.playerY);
+      ctx.lineTo(gameState.playerX + 11, gameState.playerY + 8);
+      ctx.fill();
+      ctx.beginPath();
+      ctx.moveTo(gameState.playerX + PLAYER_SIZE - 8, gameState.playerY + 8);
+      ctx.lineTo(gameState.playerX + PLAYER_SIZE - 8, gameState.playerY);
+      ctx.lineTo(gameState.playerX + PLAYER_SIZE - 11, gameState.playerY + 8);
+      ctx.fill();
 
       // Eyes
-      ctx.fillStyle = '#fff';
-      ctx.fillRect(gameState.playerX + 8, gameState.playerY + 10, 5, 5);
-      ctx.fillRect(gameState.playerX + 17, gameState.playerY + 10, 5, 5);
+      ctx.shadowBlur = 0;
+      ctx.fillStyle = '#fef3c7';
+      ctx.fillRect(gameState.playerX + 9, gameState.playerY + 14, 4, 5);
+      ctx.fillRect(gameState.playerX + PLAYER_SIZE - 13, gameState.playerY + 14, 4, 5);
 
-      // Draw HUD
-      ctx.fillStyle = '#fff';
-      ctx.font = '16px Arial';
+      // Pupils
+      ctx.fillStyle = '#000';
+      const pupilOffset = gameState.facingRight ? 1 : -1;
+      ctx.fillRect(gameState.playerX + 10 + pupilOffset, gameState.playerY + 16, 2, 2);
+      ctx.fillRect(gameState.playerX + PLAYER_SIZE - 12 + pupilOffset, gameState.playerY + 16, 2, 2);
+
+      // Running animation (legs)
+      if (!isJumping && Math.abs(velocityX) > 0) {
+        const legOffset = Math.sin(runFrame) * 3;
+        ctx.fillStyle = theme.game.player;
+        ctx.fillRect(gameState.playerX + 8, gameState.playerY + PLAYER_SIZE - 8 + legOffset, 4, 8);
+        ctx.fillRect(gameState.playerX + PLAYER_SIZE - 12, gameState.playerY + PLAYER_SIZE - 8 - legOffset, 4, 8);
+      }
+
+      ctx.restore();
+
+      // HUD - Compact top right corner
+      ctx.save();
+      const hudWidth = 160;
+      const hudHeight = 55;
+      const hudX = CANVAS_WIDTH - hudWidth - 10;
+      const hudY = 10;
+
+      // Background
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+      ctx.fillRect(hudX, hudY, hudWidth, hudHeight);
+
+      ctx.strokeStyle = 'rgba(124, 58, 237, 0.5)';
+      ctx.lineWidth = 2;
+      ctx.strokeRect(hudX, hudY, hudWidth, hudHeight);
+
+      // Stats
+      ctx.fillStyle = theme.text.primary;
+      ctx.font = 'bold 10px system-ui';
       ctx.textAlign = 'left';
-      ctx.fillText(`Level: ${gameState.level}`, 10, 25);
-      ctx.fillText(`Score: ${gameState.score}`, 10, 50);
-      ctx.fillText(`Lives: ${gameState.lives}`, 10, 75);
 
+      // Level & Score
+      ctx.fillText(`Level ${gameState.level}`, hudX + 8, hudY + 15);
+      ctx.fillText(`Score: ${gameState.score}`, hudX + 8, hudY + 30);
+
+      // Coins
+      ctx.fillStyle = theme.accent.secondary;
+      ctx.fillText(`Coins: ${gameState.coins}`, hudX + 8, hudY + 45);
+
+      // Lives (top right of HUD)
+      ctx.fillStyle = theme.accent.danger;
+      for (let i = 0; i < gameState.lives; i++) {
+        ctx.fillRect(hudX + hudWidth - 40 + i * 12, hudY + 8, 10, 10);
+      }
+
+      ctx.restore();
+
+      // Troll message
       if (trollMessage) {
-        ctx.fillStyle = '#ff6b6b';
-        ctx.font = 'bold 24px Arial';
+        ctx.save();
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.8)';
+        ctx.fillRect(0, CANVAS_HEIGHT / 2 - 40, CANVAS_WIDTH, 80);
+
+        ctx.strokeStyle = theme.accent.primary;
+        ctx.lineWidth = 3;
+        ctx.strokeRect(5, CANVAS_HEIGHT / 2 - 35, CANVAS_WIDTH - 10, 70);
+
+        ctx.fillStyle = theme.accent.secondary;
+        ctx.font = 'bold 24px system-ui';
         ctx.textAlign = 'center';
-        ctx.fillText(trollMessage, CANVAS_WIDTH / 2, 100);
+        ctx.fillText(trollMessage, CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2 + 8);
+        ctx.restore();
       }
     };
 
     draw();
-  }, [gameState, platforms, trollMessage]);
+  }, [gameState, platforms, coins, trollMessage, runFrame, isJumping, velocityX]);
 
   // Game loop
   useEffect(() => {
@@ -301,89 +659,168 @@ const MathDevilGame = ({ onGameEnd }: { onGameEnd: (level: number, score: number
         let newIsJumping = isJumping;
         let newLives = prev.lives;
         let newScore = prev.score;
-        let hitPlatform = false;
+        let newCoins = prev.coins;
+        let newFacingRight = prev.facingRight;
 
-        // Boundary checks
+        // Update facing direction
+        if (velocityX > 0) newFacingRight = true;
+        if (velocityX < 0) newFacingRight = false;
+
+        // Boundaries
         if (newX < 0) newX = 0;
         if (newX > CANVAS_WIDTH - PLAYER_SIZE) newX = CANVAS_WIDTH - PLAYER_SIZE;
 
+        // Coin collection - check coins from state to prevent multiple collections
+        coins.forEach(coin => {
+          if (!coin.collected &&
+              Math.abs(newX + PLAYER_SIZE / 2 - coin.x) < 22 &&
+              Math.abs(newY + PLAYER_SIZE / 2 - coin.y) < 22) {
+            newCoins += 10;
+            newScore += 50;
+            // Mark coin as collected
+            setCoins(prevCoins =>
+              prevCoins.map(c =>
+                c.x === coin.x && c.y === coin.y ? { ...c, collected: true } : c
+              )
+            );
+          }
+        });
+
         // Platform collision
-        platforms.forEach(platform => {
+        platforms.forEach((platform, index) => {
           if (
             newX < platform.x + platform.width &&
             newX + PLAYER_SIZE > platform.x &&
             prev.playerY + PLAYER_SIZE <= platform.y &&
             newY + PLAYER_SIZE >= platform.y &&
-            newY + PLAYER_SIZE <= platform.y + platform.height + 10
+            newY + PLAYER_SIZE <= platform.y + platform.height + 12
           ) {
             if (platform.isSpike) {
               newLives--;
-              setTrollMessage('OUCH! That\'s a spike! 😈');
+              setTrollMessage('OUCH! Spikes! 💀');
               setTimeout(() => setTrollMessage(''), 1500);
               if (newLives <= 0) {
                 setGameState(prev => ({ ...prev, gameOver: true }));
-                onGameEnd(prev.level, prev.score);
+                onGameEnd(prev.level, prev.score, prev.coins);
               }
               return;
             }
 
             if (platform.isFake) {
-              setTrollMessage('FAKE PLATFORM! Gotcha! 😂');
+              setTrollMessage('FAKE! You fell for it! 😈');
               setTimeout(() => setTrollMessage(''), 1500);
-              newY = prev.playerY;
               return;
             }
 
-            if (platform.mathOption !== undefined) {
-              if (platform.mathOption === prev.currentQuestion?.answer) {
-                newScore += 100 * prev.level;
-                setTrollMessage('Correct! +' + (100 * prev.level) + ' points! 🎉');
-                setTimeout(() => setTrollMessage(''), 1500);
+            // Moving platform troll
+            if (platform.willMove && !platform.isMoving && platform.targetX !== undefined) {
+              setPlatforms(prevPlatforms => {
+                const updated = [...prevPlatforms];
+                updated[index] = { ...platform, isMoving: true };
+                return updated;
+              });
+              setTrollMessage('Platform moving! 😱');
+              setTimeout(() => setTrollMessage(''), 1500);
+
+              const moveInterval = setInterval(() => {
+                setPlatforms(prevPlatforms => {
+                  const updated = [...prevPlatforms];
+                  const movingPlatform = updated[index];
+                  if (movingPlatform.targetX !== undefined) {
+                    const diff = movingPlatform.targetX - movingPlatform.x;
+                    if (Math.abs(diff) > 2) {
+                      movingPlatform.x += diff * 0.08;
+                    } else {
+                      clearInterval(moveInterval);
+                    }
+                  }
+                  return updated;
+                });
+              }, 20);
+            }
+
+            // Disappearing platform
+            if (platform.disappearing && !platform.isMoving) {
+              setPlatforms(prevPlatforms => {
+                const updated = [...prevPlatforms];
+                updated[index] = { ...platform, isMoving: true };
+                return updated;
+              });
+
+              setTimeout(() => {
+                let alpha = 1;
+                const fadeInterval = setInterval(() => {
+                  alpha -= 0.05;
+                  setPlatforms(prevPlatforms => {
+                    const updated = [...prevPlatforms];
+                    updated[index] = { ...updated[index], alpha: Math.max(0, alpha) };
+                    return updated;
+                  });
+                  if (alpha <= 0) {
+                    clearInterval(fadeInterval);
+                    setPlatforms(prevPlatforms => {
+                      const updated = [...prevPlatforms];
+                      updated[index] = { ...updated[index], isFake: true };
+                      return updated;
+                    });
+                  }
+                }, 50);
+              }, 500);
+            }
+
+            if (platform.mathOption !== undefined && !scoredOnCorrectPlatform) {
+              if (platform.isCorrect) {
+                newScore += 300 * prev.level;
+                setTrollMessage(`TROLLED! +${300 * prev.level} 😈`);
+                setTimeout(() => setTrollMessage(''), 2000);
+                setScoredOnCorrectPlatform(true);
               } else {
                 newLives--;
-                setTrollMessage('Wrong answer! -1 life 😈');
-                setTimeout(() => setTrollMessage(''), 1500);
+                setTrollMessage('Wrong! That\'s the real answer! 🤓');
+                setTimeout(() => setTrollMessage(''), 2000);
               }
             }
 
             newY = platform.y - PLAYER_SIZE;
             newVelocityY = 0;
             newIsJumping = false;
-            hitPlatform = true;
           }
         });
 
-        // Check exit
+        // Exit check
         const exitPlatform = platforms[platforms.length - 1];
         if (exitPlatform &&
             newX < exitPlatform.x + exitPlatform.width &&
             newX + PLAYER_SIZE > exitPlatform.x &&
             newY < exitPlatform.y + exitPlatform.height &&
             newY + PLAYER_SIZE > exitPlatform.y) {
-          // Level complete
           const nextLevel = prev.level + 1;
           const question = generateMathQuestion(nextLevel);
           generatePlatforms(nextLevel, question);
+          setTrollMessage('Level Complete! 🎉');
+          setTimeout(() => setTrollMessage(''), 2000);
+          setScoredOnCorrectPlatform(false);
           return {
             ...prev,
             level: nextLevel,
-            score: newScore + (50 * prev.level),
+            score: newScore + (150 * prev.level),
             currentQuestion: question,
-            playerX: 50,
-            playerY: 300,
+            playerX: 60,
+            playerY: CANVAS_HEIGHT - 130,
           };
         }
 
-        // Fall off screen
+        // Fall off
         if (newY > CANVAS_HEIGHT) {
           newLives--;
-          setTrollMessage('You fell! 😱');
+          setTrollMessage('Fell into the void! 😱');
           setTimeout(() => setTrollMessage(''), 1500);
           if (newLives <= 0) {
             return { ...prev, gameOver: true };
           }
-          newY = 300;
-          newX = 50;
+          newY = CANVAS_HEIGHT - 130;
+          newX = 60;
+          newVelocityY = 0;
         }
 
         setVelocityY(newVelocityY);
@@ -395,14 +832,17 @@ const MathDevilGame = ({ onGameEnd }: { onGameEnd: (level: number, score: number
           playerX: newX,
           lives: newLives,
           score: newScore,
+          coins: newCoins,
+          facingRight: newFacingRight,
+          isRunning: Math.abs(velocityX) > 0,
         };
       });
-    }, 1000 / 60); // 60 FPS
+    }, 1000 / 60);
 
     return () => clearInterval(gameLoop);
   }, [velocityY, velocityX, isJumping, platforms, gameState.gameOver]);
 
-  // Keyboard controls
+  // Controls
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (gameState.gameOver) return;
@@ -449,16 +889,26 @@ const MathDevilGame = ({ onGameEnd }: { onGameEnd: (level: number, score: number
 
   if (gameState.gameOver) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen bg-[#0f0f23] text-white p-4">
-        <div className="bg-[#1a1a2e] border-4 border-[#e74c3c] rounded-lg p-8 max-w-md w-full text-center shadow-2xl">
-          <h1 className="text-4xl mb-4 text-[#e74c3c] font-bold">Game Over!</h1>
-          <div className="space-y-3 mb-6">
-            <p className="text-xl">Level Reached: <span className="text-yellow-400 font-bold">{gameState.level}</span></p>
-            <p className="text-xl">Final Score: <span className="text-green-400 font-bold">{gameState.score}</span></p>
+      <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-b from-[#0a0e27] to-[#151932] text-white p-4">
+        <div className="bg-[#1e2139] border-2 border-purple-500 rounded-xl p-8 max-w-md w-full text-center shadow-2xl">
+          <h1 className="text-4xl mb-6 text-purple-400 font-bold">Game Over!</h1>
+          <div className="space-y-4 mb-8">
+            <div className="bg-[#252941] p-4 rounded-lg">
+              <p className="text-sm text-gray-400 mb-1">Level Reached</p>
+              <p className="text-3xl text-amber-400 font-bold">{gameState.level}</p>
+            </div>
+            <div className="bg-[#252941] p-4 rounded-lg">
+              <p className="text-sm text-gray-400 mb-1">Final Score</p>
+              <p className="text-3xl text-emerald-400 font-bold">{gameState.score}</p>
+            </div>
+            <div className="bg-[#252941] p-4 rounded-lg">
+              <p className="text-sm text-gray-400 mb-1">Coins Collected</p>
+              <p className="text-3xl text-amber-400 font-bold">{gameState.coins}</p>
+            </div>
           </div>
           <button
-            onClick={() => onGameEnd(gameState.level, gameState.score)}
-            className="bg-[#e74c3c] px-8 py-4 rounded-lg text-xl hover:bg-[#c0392b] transition-colors w-full font-bold"
+            onClick={() => onGameEnd(gameState.level, gameState.score, gameState.coins)}
+            className="bg-purple-600 hover:bg-purple-700 text-white px-8 py-4 rounded-lg text-lg font-bold w-full transition-all transform hover:scale-105"
           >
             Submit Score & View Leaderboard
           </button>
@@ -468,76 +918,50 @@ const MathDevilGame = ({ onGameEnd }: { onGameEnd: (level: number, score: number
   }
 
   return (
-    <div className="flex flex-col bg-[#0f0f23] px-2 py-1">
-      {/* Game Boy Container */}
-      <div className="flex flex-col items-center max-w-lg mx-auto w-full">
-
-        {/* Question Modal */}
-        {showQuestion && gameState.currentQuestion && (
-          <div className="fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center z-50 p-4">
-            <div className="bg-[#1a1a2e] border-4 border-yellow-400 rounded-lg p-4 max-w-sm w-full text-center">
-              <h2 className="text-xl font-bold mb-2 text-yellow-400">Level {gameState.level}</h2>
-              <p className="text-sm text-white mb-2">Find the correct platform!</p>
-              <p className="text-2xl font-bold text-[#4ecdc4] mb-4">{gameState.currentQuestion.question}</p>
-              <button
-                onClick={() => setShowQuestion(false)}
-                className="bg-green-500 px-4 py-2 rounded-lg hover:bg-green-600 text-white font-bold w-full"
-              >
-                Start!
-              </button>
-            </div>
-          </div>
-        )}
-
-        {/* Game Screen (Top Half) */}
-        <div className="bg-[#1a1a2e] border-4 border-[#e74c3c] rounded-t-2xl p-2 w-full shadow-2xl">
+    <div className="flex flex-col bg-gradient-to-b from-[#0a0e27] to-[#151932] min-h-screen">
+      <div className="flex flex-col items-center max-w-2xl mx-auto w-full px-2 py-3 flex-1">
+        <div className="bg-[#1e2139] border-3 border-purple-500/30 rounded-xl p-4 w-full shadow-2xl mb-3">
           <canvas
             ref={canvasRef}
             width={CANVAS_WIDTH}
             height={CANVAS_HEIGHT}
-            className="rounded-lg bg-[#0f0f23] w-full"
-            style={{ imageRendering: 'pixelated', maxHeight: '45vh' }}
+            className="rounded-lg w-full"
+            style={{ imageRendering: 'crisp-edges' }}
           />
         </div>
 
-        {/* Game Boy Controls (Bottom Half) */}
-        <div className="bg-[#2d2d44] border-4 border-[#e74c3c] border-t-0 rounded-b-2xl p-3 w-full shadow-2xl">
-          <div className="text-center mb-2">
-            <p className="text-white text-xs font-mono">Jump on the correct answer!</p>
-          </div>
+        <div className="bg-[#1e2139] border-3 border-purple-500/30 rounded-xl p-4 w-full shadow-2xl mb-20">
+          <p className="text-white text-center text-sm font-semibold mb-4">
+            Jump on the TROLL answer, not the mathematically correct one!
+          </p>
 
-          {/* D-Pad Style Controls */}
-          <div className="flex items-center justify-center gap-4">
-            {/* Left/Right D-Pad */}
-            <div className="relative">
-              <div className="flex flex-col items-center">
-                <div className="flex gap-1">
-                  <button
-                    onTouchStart={() => setVelocityX(-MOVE_SPEED)}
-                    onTouchEnd={() => setVelocityX(0)}
-                    onMouseDown={() => setVelocityX(-MOVE_SPEED)}
-                    onMouseUp={() => setVelocityX(0)}
-                    onMouseLeave={() => setVelocityX(0)}
-                    className="bg-[#3a3a52] border-2 border-gray-600 px-4 py-4 md:px-6 md:py-6 rounded text-white text-xl font-bold active:bg-[#4a4a62] shadow-lg"
-                  >
-                    ←
-                  </button>
-                  <button
-                    onTouchStart={() => setVelocityX(MOVE_SPEED)}
-                    onTouchEnd={() => setVelocityX(0)}
-                    onMouseDown={() => setVelocityX(MOVE_SPEED)}
-                    onMouseUp={() => setVelocityX(0)}
-                    onMouseLeave={() => setVelocityX(0)}
-                    className="bg-[#3a3a52] border-2 border-gray-600 px-4 py-4 md:px-6 md:py-6 rounded text-white text-xl font-bold active:bg-[#4a4a62] shadow-lg"
-                  >
-                    →
-                  </button>
-                </div>
-                <p className="text-xs text-gray-400 mt-1">MOVE</p>
+          <div className="flex items-center justify-center gap-8">
+            <div className="flex flex-col items-center">
+              <div className="flex gap-3">
+                <button
+                  onTouchStart={() => setVelocityX(-MOVE_SPEED)}
+                  onTouchEnd={() => setVelocityX(0)}
+                  onMouseDown={() => setVelocityX(-MOVE_SPEED)}
+                  onMouseUp={() => setVelocityX(0)}
+                  onMouseLeave={() => setVelocityX(0)}
+                  className="bg-[#2d3250] hover:bg-[#3d4260] border-2 border-purple-500/50 px-6 py-6 rounded-lg text-white text-2xl font-bold active:bg-purple-600 shadow-lg transition-all"
+                >
+                  ←
+                </button>
+                <button
+                  onTouchStart={() => setVelocityX(MOVE_SPEED)}
+                  onTouchEnd={() => setVelocityX(0)}
+                  onMouseDown={() => setVelocityX(MOVE_SPEED)}
+                  onMouseUp={() => setVelocityX(0)}
+                  onMouseLeave={() => setVelocityX(0)}
+                  className="bg-[#2d3250] hover:bg-[#3d4260] border-2 border-purple-500/50 px-6 py-6 rounded-lg text-white text-2xl font-bold active:bg-purple-600 shadow-lg transition-all"
+                >
+                  →
+                </button>
               </div>
+              <p className="text-xs text-gray-400 mt-2 font-semibold">MOVE</p>
             </div>
 
-            {/* Jump Button */}
             <div className="flex flex-col items-center">
               <button
                 onTouchStart={() => {
@@ -552,20 +976,55 @@ const MathDevilGame = ({ onGameEnd }: { onGameEnd: (level: number, score: number
                     setIsJumping(true);
                   }
                 }}
-                className="bg-[#e74c3c] border-4 border-[#c0392b] px-6 py-6 md:px-8 md:py-8 rounded-full text-white text-xl md:text-2xl font-bold active:bg-[#c0392b] shadow-lg"
+                className="bg-purple-600 hover:bg-purple-700 border-4 border-purple-400 px-10 py-10 rounded-full text-white text-xl font-bold active:bg-purple-800 shadow-lg transition-all transform hover:scale-105"
               >
                 JUMP
               </button>
-              <p className="text-xs text-gray-400 mt-1">A</p>
+              <p className="text-xs text-gray-400 mt-2 font-semibold">SPACE</p>
             </div>
           </div>
 
-          {/* Desktop Keyboard Hint */}
-          <div className="mt-2 text-center hidden md:block">
-            <p className="text-xs text-gray-400">Desktop: Arrow Keys / WASD</p>
+          <div className="mt-4 text-center hidden md:block">
+            <p className="text-xs text-gray-500">Keyboard: Arrow Keys / WASD + Space</p>
           </div>
         </div>
       </div>
+
+      {/* Bottom Navigation Bar */}
+      <nav className="fixed bottom-0 left-0 right-0 bg-[#1e2139] border-t-2 border-purple-500/30 shadow-2xl z-50">
+        <div className="max-w-2xl mx-auto px-4 py-3">
+          <div className="flex justify-around items-center">
+            <Link
+              href="/"
+              className="flex flex-col items-center gap-1 text-purple-400 hover:text-purple-300 transition-colors"
+            >
+              <span className="text-2xl">🎮</span>
+              <span className="text-xs font-semibold">Game</span>
+            </Link>
+            <Link
+              href="/leaderboard"
+              className="flex flex-col items-center gap-1 text-gray-400 hover:text-purple-300 transition-colors"
+            >
+              <span className="text-2xl">🏆</span>
+              <span className="text-xs font-semibold">Leaderboard</span>
+            </Link>
+            <Link
+              href="/badges"
+              className="flex flex-col items-center gap-1 text-gray-400 hover:text-purple-300 transition-colors"
+            >
+              <span className="text-2xl">🏅</span>
+              <span className="text-xs font-semibold">Badges</span>
+            </Link>
+            <Link
+              href="/profile"
+              className="flex flex-col items-center gap-1 text-gray-400 hover:text-purple-300 transition-colors"
+            >
+              <span className="text-2xl">👤</span>
+              <span className="text-xs font-semibold">Profile</span>
+            </Link>
+          </div>
+        </div>
+      </nav>
     </div>
   );
 };
