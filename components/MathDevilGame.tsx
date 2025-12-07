@@ -616,12 +616,12 @@ const MathDevilGame = ({ onGameEnd }: { onGameEnd: (level: number, score: number
 
       ctx.restore();
 
-      // HUD - Compact top right corner
+      // HUD - Bottom right corner
       ctx.save();
       const hudWidth = 160;
       const hudHeight = 55;
       const hudX = CANVAS_WIDTH - hudWidth - 10;
-      const hudY = 10;
+      const hudY = CANVAS_HEIGHT - hudHeight - 40; // Bottom of canvas, above ground
 
       // Background
       ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
